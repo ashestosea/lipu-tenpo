@@ -10,3 +10,4 @@ tui = {package = "ratatui", version = "0.20.1"}
 crossterm = "0.26.1"
 tui-input = "0.7.0"
 clap = "*"
+chrono = "*"
