@@ -52,29 +52,23 @@ pub struct Entry {
     pub tags: Vec<String>,
 }
 
-impl From<Entry> for String {
-    fn from(val: Entry) -> String {
-        if val.project.is_empty() {
-            format!("{} {}", val.end.format("%Y-%m-%d %H:%M"), val.activity)
-        } else {
-            format!(
-                "{} {}: {}",
-                val.end.format("%Y-%m-%d %H:%M"),
-                val.project,
-                val.activity
-            )
-        }
-    }
-}
-
 impl From<&Entry> for String {
     fn from(val: &Entry) -> String {
+        let duration = val.duration();
+        let duration_str = format!("{}h {}m", duration.num_hours(), duration.num_minutes() % 60);
+        if duration.is_zero() {}
         if val.project.is_empty() {
-            format!("{} {}", val.end.format("%Y-%m-%d %H:%M"), val.activity)
+            format!(
+                "{:<8} {:<6} {}",
+                duration_str,
+                val.end.format("%H:%M"),
+                val.activity
+            )
         } else {
             format!(
-                "{} {}: {}",
-                val.end.format("%Y-%m-%d %H:%M"),
+                "{:<8} {:<6} {}: {}",
+                duration_str,
+                val.end.format("%H:%M"),
                 val.project,
                 val.activity
             )
@@ -82,8 +76,8 @@ impl From<&Entry> for String {
     }
 }
 
-impl From<Entry> for Span<'_> {
-    fn from(val: Entry) -> Self {
+impl From<&Entry> for Span<'_> {
+    fn from(val: &Entry) -> Self {
         if val.is_on_task() {
             Span::raw(String::from(val))
         } else {
@@ -97,7 +91,14 @@ impl From<Entry> for Span<'_> {
 
 impl From<&Entry> for Text<'_> {
     fn from(val: &Entry) -> Self {
-        Text::raw(String::from(val))
+        if val.is_on_task() {
+            Text::raw(String::from(val))
+        } else {
+            Text::styled(
+                String::from(val),
+                Style::default().add_modifier(Modifier::DIM),
+            )
+        }
     }
 }
 
