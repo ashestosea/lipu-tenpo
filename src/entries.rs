@@ -170,7 +170,7 @@ impl Entry {
     }
 
     pub fn is_on_task(&self) -> bool {
-        self.activity.contains("**")
+        !self.activity.contains("**")
     }
 }
 
