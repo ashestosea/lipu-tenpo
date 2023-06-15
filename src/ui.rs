@@ -66,7 +66,7 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
         .collect();
     let list: List = List::new(items)
         .block(block)
-        .style(Style::default().bg(Color::Magenta));
+        .style(Style::default().bg(Color::DarkGray));
     frame.render_widget(list, main_layout[1]);
 
     // Summary
