@@ -1,12 +1,14 @@
+use std::path::PathBuf;
+
 use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout},
-    style::Style,
+    style::{Color, Modifier, Style},
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,
 };
 
-use crate::app::App;
+use crate::{app::App, entries};
 
 /// Renders the user interface widgets.
 pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
@@ -36,31 +38,35 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
         .split(top_layout[0]);
 
     let block = Block::default()
-        .borders(Borders::ALL)
-        .border_style(Style::default())
-        .border_type(BorderType::Rounded)
-        .title("lipu-tenpo")
+        .borders(Borders::NONE)
+        // .border_style(Style::default())
+        // .border_type(BorderType::Rounded)
+        // .title("lipu-tenpo")
         .title_alignment(Alignment::Center);
     frame.render_widget(block, top_layout[0]);
 
     // Date
     let block = Block::default()
         .borders(Borders::BOTTOM)
-        .title(chrono::Local::now().format("%Y-%m-%d").to_string());
+        .title(chrono::Local::now().format("%Y-%m-%d").to_string())
+        .style(
+            Style::default()
+                .bg(Color::Blue)
+                .add_modifier(Modifier::DIM)
+                .fg(Color::DarkGray),
+        );
     frame.render_widget(block, main_layout[0]);
 
     // Log
     let block = Block::default().borders(Borders::NONE);
-    let items = vec![
-        ListItem::new("09:00: **arrive"),
-        ListItem::new("09:15: dev meeting"),
-        ListItem::new("12:00: work"),
-        ListItem::new("13:00: **lunch"),
-        ListItem::new("15:30: work"),
-        ListItem::new("16:00: **break"),
-        ListItem::new("17:30: work"),
-    ];
-    let list: List = List::new(items).block(block);
+    let entries = entries::read_all_from(&PathBuf::from("./test.csv")).unwrap();
+    let items: Vec<ListItem> = entries
+        .iter()
+        .map(|f| -> ListItem { ListItem::new(f) })
+        .collect();
+    let list: List = List::new(items)
+        .block(block)
+        .style(Style::default().bg(Color::Magenta));
     frame.render_widget(list, main_layout[1]);
 
     // Summary
@@ -85,7 +91,6 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
     frame.render_widget(other_summary, summary_layout[1]);
 
     // Input
-    let block = Block::default()
-        .borders(Borders::TOP);
+    let block = Block::default().borders(Borders::TOP);
     frame.render_widget(block, main_layout[3]);
 }
