@@ -2,7 +2,10 @@ use std::{error::Error, path::PathBuf};
 
 use chrono::{Duration, NaiveDateTime};
 use serde::{Deserialize, Serialize};
-use tui::{text::{Span, Text}, style::{Style, Modifier}};
+use tui::{
+    style::{Modifier, Style},
+    text::{Span, Text},
+};
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct EntryRaw {
@@ -53,9 +56,13 @@ impl From<Entry> for String {
     fn from(val: Entry) -> String {
         if val.project.is_empty() {
             format!("{} {}", val.end.format("%Y-%m-%d %H:%M"), val.activity)
-        }
-        else {
-            format!("{} {}: {}", val.end.format("%Y-%m-%d %H:%M"), val.project, val.activity)
+        } else {
+            format!(
+                "{} {}: {}",
+                val.end.format("%Y-%m-%d %H:%M"),
+                val.project,
+                val.activity
+            )
         }
     }
 }
@@ -64,9 +71,13 @@ impl From<&Entry> for String {
     fn from(val: &Entry) -> String {
         if val.project.is_empty() {
             format!("{} {}", val.end.format("%Y-%m-%d %H:%M"), val.activity)
-        }
-        else {
-            format!("{} {}: {}", val.end.format("%Y-%m-%d %H:%M"), val.project, val.activity)
+        } else {
+            format!(
+                "{} {}: {}",
+                val.end.format("%Y-%m-%d %H:%M"),
+                val.project,
+                val.activity
+            )
         }
     }
 }
@@ -75,9 +86,11 @@ impl From<Entry> for Span<'_> {
     fn from(val: Entry) -> Self {
         if val.is_on_task() {
             Span::raw(String::from(val))
-        }
-        else {
-            Span::styled(String::from(val), Style::default().add_modifier(Modifier::DIM))
+        } else {
+            Span::styled(
+                String::from(val),
+                Style::default().add_modifier(Modifier::DIM),
+            )
         }
     }
 }
@@ -100,7 +113,7 @@ impl Entry {
     }
 
     /// Returns Entry with project, activity, and tags initiated from the EntryRaw.
-    /// 
+    ///
     /// Start and end times are both set to the EntryRaw's end time.
     pub fn from_raw(raw: &EntryRaw) -> Entry {
         Entry {
@@ -155,7 +168,7 @@ impl Entry {
     pub fn duration(&self) -> Duration {
         self.end - self.start
     }
-    
+
     pub fn is_on_task(&self) -> bool {
         self.activity.contains("**")
     }
@@ -254,8 +267,8 @@ mod string_vector {
 
 #[cfg(test)]
 mod test {
-    use std::path::PathBuf;
     use super::read_all_from;
+    use std::path::PathBuf;
 
     #[test]
     fn test_read_bad_file() {

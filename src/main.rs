@@ -1,10 +1,10 @@
-use std::io;
-use tui::backend::CrosstermBackend;
-use tui::Terminal;
 use lipu_tenpo::app::{App, AppResult};
 use lipu_tenpo::event::{Event, EventHandler};
 use lipu_tenpo::handler::handle_key_events;
 use lipu_tenpo::tui::Tui;
+use std::io;
+use tui::backend::CrosstermBackend;
+use tui::Terminal;
 
 fn main() -> AppResult<()> {
     // Create an application.
