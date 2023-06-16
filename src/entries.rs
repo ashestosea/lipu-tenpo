@@ -180,6 +180,7 @@ pub fn read_all_from(path: &PathBuf) -> Result<Vec<Entry>, Box<dyn Error>> {
         .has_headers(false)
         .flexible(true)
         .quoting(true)
+        .trim(csv::Trim::All)
         .from_path(path)?;
 
     let read_results: Result<Vec<EntryRaw>, Box<dyn Error>> = reader
@@ -249,7 +250,7 @@ mod string_vector {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&vector.join(","))
+        serializer.serialize_str(&vector.join(", "))
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
@@ -282,7 +283,12 @@ mod test {
     fn test_read_good_file() {
         let result = read_all_from(&PathBuf::from("./test.csv"));
         let entries = result.unwrap_or_default();
-        assert_eq!(entries.len(), 4);
+        
+        for e in &entries {
+            println!("{}", String::from(e));
+        }
+        
+        assert_eq!(entries.len(), 9);
         assert_eq!(entries[0].activity, "**arrive");
     }
 }
