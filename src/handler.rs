@@ -15,7 +15,7 @@ pub fn handle_key_events(mut app: &mut App, key: KeyEvent) -> AppResult<()> {
         },
         InputMode::Logging => match key.code {
             KeyCode::Enter => {
-                app.messages.push(app.input.value().into());
+                app.add_entry(app.input.value().into());
                 app.input.reset();
             }
             KeyCode::Esc => {
