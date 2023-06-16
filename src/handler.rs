@@ -1,28 +1,31 @@
-use crate::app::{App, AppResult};
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crate::app::{App, InputMode, AppResult};
+use crossterm::event::{Event, KeyCode, KeyEvent};
+use tui_input::backend::crossterm::EventHandler;
 
-/// Handles the key events and updates the state of [`App`].
-pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
-    match key_event.code {
-        // Exit application on `ESC` or `q`
-        KeyCode::Esc | KeyCode::Char('q') => {
-            app.quit();
-        }
-        // Exit application on `Ctrl-C`
-        KeyCode::Char('c') | KeyCode::Char('C') => {
-            if key_event.modifiers == KeyModifiers::CONTROL {
+pub fn handle_key_events(mut app: &mut App, key: KeyEvent) -> AppResult<()> {
+    match app.input_mode {
+        InputMode::Editing => match key.code {
+            KeyCode::Char('e') => {
+                app.input_mode = InputMode::Logging;
+            }
+            KeyCode::Char('q') => {
                 app.quit();
             }
-        }
-        // Counter handlers
-        KeyCode::Right => {
-            app.increment_counter();
-        }
-        KeyCode::Left => {
-            app.decrement_counter();
-        }
-        // Other handlers you could add here.
-        _ => {}
+            _ => {}
+        },
+        InputMode::Logging => match key.code {
+            KeyCode::Enter => {
+                app.messages.push(app.input.value().into());
+                app.input.reset();
+            }
+            KeyCode::Esc => {
+                app.input_mode = InputMode::Editing;
+            }
+            _ => {
+                app.input.handle_event(&Event::Key(key));
+            }
+        },
     }
+    
     Ok(())
 }
