@@ -39,7 +39,7 @@ impl From<Entry> for EntryRaw {
     }
 }
 
-#[derive(Default, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
     pub start: NaiveDateTime,
     pub end: NaiveDateTime,
@@ -50,6 +50,23 @@ pub struct Entry {
     /// Can't be an empty string
     pub activity: String,
     pub tags: Vec<String>,
+}
+
+impl From<String> for Entry {
+    fn from(value: String) -> Entry {
+        let now =
+            chrono::NaiveDateTime::from_timestamp_millis(chrono::Local::now().timestamp_millis())
+                .unwrap();
+        let (first, tags) = value.split_once('+').unwrap_or_else(|| (value.as_str(), ""));
+        let (project, activity) = first.split_once(':').unwrap_or_else(|| ("", first));
+        Entry {
+            start: now,
+            end: now,
+            project: String::from(project),
+            activity: String::from(activity),
+            tags: tags.split("+").map(|f| -> String {String::from(f)}).collect(),
+        }
+    }
 }
 
 impl From<&Entry> for String {
