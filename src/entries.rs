@@ -298,7 +298,7 @@ mod test {
 
     #[test]
     fn test_read_good_file() {
-        let result = read_all_from(&PathBuf::from("./test.csv"));
+        let result = read_all_from(&PathBuf::from("./test/test.csv"));
         let entries = result.unwrap_or_default();
         
         for e in &entries {

@@ -59,7 +59,7 @@ pub fn render<B: Backend>(_app: &mut App, frame: &mut Frame<'_, B>) {
 
     // Log
     let block = Block::default().borders(Borders::NONE);
-    let entries = entries::read_all_from(&PathBuf::from("./test.csv")).unwrap();
+    let entries = entries::read_all_from(&PathBuf::from("./test/test.csv")).unwrap();
     let items: Vec<ListItem> = entries
         .iter()
         .map(|f| -> ListItem { ListItem::new(f) })
