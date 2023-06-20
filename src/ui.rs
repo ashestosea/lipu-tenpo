@@ -11,7 +11,7 @@ use tui::{
 use crate::{app::App, entries};
 
 /// Renders the user interface widgets.
-pub fn render<B: Backend>(_app: &mut App, frame: &mut Frame<'_, B>) {
+pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
     // This is where you add new widgets.
     // See the following resources:
     // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
@@ -48,7 +48,7 @@ pub fn render<B: Backend>(_app: &mut App, frame: &mut Frame<'_, B>) {
     // Date
     let block = Block::default()
         .borders(Borders::BOTTOM)
-        .title(chrono::Local::now().format("%Y-%m-%d").to_string())
+        .title(app.current_date.format("%Y-%m-%d").to_string())
         .style(
             Style::default()
                 .bg(Color::Blue)
@@ -92,5 +92,6 @@ pub fn render<B: Backend>(_app: &mut App, frame: &mut Frame<'_, B>) {
 
     // Input
     let block = Block::default().borders(Borders::TOP);
-    frame.render_widget(block, main_layout[3]);
+    let input = Paragraph::new(app.input.value()).block(block);
+    frame.render_widget(input, main_layout[3]);
 }
