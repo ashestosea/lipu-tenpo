@@ -27,11 +27,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         tui.draw(&mut app)?;
         // Handle events
         if let crossterm::event::Event::Key(key) = crossterm::event::read()? {
+            handler::handle_key_events(&mut app, key)?
+        } else {
             match tui.events.next()? {
                 Event::Tick => app.tick(),
-                Event::Key(_) => handler::handle_key_events(&mut app, key)?,
                 Event::Mouse(_) => {}
                 Event::Resize(_, _) => {}
+                _ => {}
             }
         }
     }
