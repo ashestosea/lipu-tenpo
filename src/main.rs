@@ -14,17 +14,17 @@ use tui::{backend::CrosstermBackend, Terminal};
 struct Arguments {
     #[arg(short, long, value_name = "CONF_FILE")]
     config: Option<PathBuf>,
-    
+
     #[arg(short, long, value_name = "LOG_FILE")]
     log: Option<PathBuf>,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Arguments::parse();
-    
+
     // Create the application
     let mut app = App::new();
-    app.log_path = PathBuf::from(args.log.unwrap_or_default());
+    app.log_path = args.log.unwrap_or_default();
 
     // Initialize the terminal user interface
     let backend = CrosstermBackend::new(io::stdout());

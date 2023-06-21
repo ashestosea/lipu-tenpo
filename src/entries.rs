@@ -1,6 +1,6 @@
-use std::{error::Error, os::unix::fs::chroot, path::PathBuf};
+use std::{error::Error, path::PathBuf};
 
-use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
+use chrono::{Duration, NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use tui::{
     style::{Modifier, Style},
@@ -65,15 +65,15 @@ impl From<String> for Entry {
         let now = chrono::Local::now().naive_local();
         let (first, tags) = value
             .split_once('+')
-            .unwrap_or_else(|| (value.as_str(), ""));
-        let (project, activity) = first.split_once(':').unwrap_or_else(|| ("", first));
+            .unwrap_or((value.as_str(), ""));
+        let (project, activity) = first.split_once(':').unwrap_or(("", first));
         Entry {
             start: now,
             end: now,
             project: String::from(project),
             activity: String::from(activity),
             tags: tags
-                .split("+")
+                .split('+')
                 .map(|f| -> String { String::from(f) })
                 .collect(),
         }
@@ -248,7 +248,6 @@ pub fn read_all(path: &PathBuf) -> Result<Vec<Entry>, Box<dyn Error>> {
 
     let read_results: Result<Vec<EntryRaw>, csv::Error> = reader
         .deserialize()
-        .map(|f| -> Result<EntryRaw, csv::Error> { Ok(f?) })
         .collect();
 
     let raw_entries = match read_results {
