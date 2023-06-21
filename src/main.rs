@@ -1,18 +1,30 @@
+use clap::Parser;
+use crossterm::event::Event as CrosstermEvent;
+use lipu_tenpo::app::App;
 /// This example is taken from https://raw.githubusercontent.com/fdehau/tui-rs/master/examples/user_input.rs
 use lipu_tenpo::event::{Event, EventHandler};
+use lipu_tenpo::handler;
 use lipu_tenpo::tui::Tui;
-use lipu_tenpo::{handler};
-use lipu_tenpo::{
-    app::App
-};
+use std::path::PathBuf;
 use std::{error::Error, io};
-use tui::{
-    backend::CrosstermBackend, Terminal,
-};
+use tui::{backend::CrosstermBackend, Terminal};
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Arguments {
+    #[arg(short, long, value_name = "CONF_FILE")]
+    config: Option<PathBuf>,
+    
+    #[arg(short, long, value_name = "LOG_FILE")]
+    log: Option<PathBuf>,
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let args = Arguments::parse();
+    
     // Create the application
     let mut app = App::new();
+    app.log_path = PathBuf::from(args.log.unwrap_or_default());
 
     // Initialize the terminal user interface
     let backend = CrosstermBackend::new(io::stdout());
@@ -26,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         // Render the UI
         tui.draw(&mut app)?;
         // Handle events
-        if let crossterm::event::Event::Key(key) = crossterm::event::read()? {
+        if let CrosstermEvent::Key(key) = crossterm::event::read()? {
             handler::handle_key_events(&mut app, key)?
         } else {
             match tui.events.next()? {

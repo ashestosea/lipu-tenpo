@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout},
@@ -8,7 +6,7 @@ use tui::{
     Frame,
 };
 
-use crate::{app::App, entries};
+use crate::app::App;
 
 /// Renders the user interface widgets.
 pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
@@ -59,7 +57,7 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
 
     // Log
     let block = Block::default().borders(Borders::NONE);
-    let entries = entries::read_all_from(&PathBuf::from("./test/test.csv")).unwrap();
+    let entries = app.load_entries().unwrap_or_default();
     let items: Vec<ListItem> = entries
         .iter()
         .map(|f| -> ListItem { ListItem::new(f) })

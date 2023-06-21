@@ -10,7 +10,7 @@ tui = {package = "ratatui", version = "0.21.0"}
 crossterm = "0.26.1"
 tui-input = "0.7.0"
 unicode-width = "0.1.10"
-clap = "*"
+clap = {version = "*", features = ["derive"]}
 chrono = {version = "*", features = ["serde"]}
 serde = {version = "*", features = ["derive"]}
 csv = "*"

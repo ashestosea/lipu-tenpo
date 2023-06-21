@@ -1,11 +1,13 @@
 use std::{error::Error, path::PathBuf};
 
-use chrono::{Duration, NaiveDateTime};
+use chrono::{Duration, NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use tui::{
     style::{Modifier, Style},
     text::{Span, Text},
 };
+
+use crate::app::App;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct EntryRaw {
@@ -15,6 +17,12 @@ pub struct EntryRaw {
     pub activity: String,
     #[serde(with = "string_vector")]
     pub tags: Vec<String>,
+}
+
+impl EntryRaw {
+    fn date_eq(&self, date: NaiveDate) -> bool {
+        self.end.date() == date
+    }
 }
 
 impl From<&Entry> for EntryRaw {
@@ -57,14 +65,19 @@ impl From<String> for Entry {
         let now =
             chrono::NaiveDateTime::from_timestamp_millis(chrono::Local::now().timestamp_millis())
                 .unwrap();
-        let (first, tags) = value.split_once('+').unwrap_or_else(|| (value.as_str(), ""));
+        let (first, tags) = value
+            .split_once('+')
+            .unwrap_or_else(|| (value.as_str(), ""));
         let (project, activity) = first.split_once(':').unwrap_or_else(|| ("", first));
         Entry {
             start: now,
             end: now,
             project: String::from(project),
             activity: String::from(activity),
-            tags: tags.split("+").map(|f| -> String {String::from(f)}).collect(),
+            tags: tags
+                .split("+")
+                .map(|f| -> String { String::from(f) })
+                .collect(),
         }
     }
 }
@@ -192,7 +205,11 @@ impl Entry {
     }
 }
 
-pub fn read_all_from(path: &PathBuf) -> Result<Vec<Entry>, Box<dyn Error>> {
+pub fn read_all(app: &App, date: NaiveDate) -> Result<Vec<Entry>, Box<dyn Error>> {
+    read_all_from(&PathBuf::from(&app.log_path), date)
+}
+
+pub fn read_all_from(path: &PathBuf, date: NaiveDate) -> Result<Vec<Entry>, Box<dyn Error>> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
         .flexible(true)
@@ -200,17 +217,19 @@ pub fn read_all_from(path: &PathBuf) -> Result<Vec<Entry>, Box<dyn Error>> {
         .trim(csv::Trim::All)
         .from_path(path)?;
 
-    let read_results: Result<Vec<EntryRaw>, Box<dyn Error>> = reader
+    let read_results: Result<Vec<EntryRaw>, csv::Error> = reader
         .deserialize()
-        .map(|e| -> Result<EntryRaw, Box<dyn Error>> { Ok(e?) })
+        .filter(|f: &Result<EntryRaw, csv::Error>| match f {
+            Ok(ent) => ent.date_eq(date),
+            Err(_) => false,
+        })
         .collect();
 
     let raw_entries = match read_results {
         Ok(x) => x,
         Err(error) => panic!("Read error {:?}", error),
     };
-    // let err = read_results.err();
-    // let raw_entries = read_results.unwrap_or_default();
+
     let count = raw_entries.len();
     let mut entries = vec![Entry::default(); count];
 
@@ -286,26 +305,33 @@ mod string_vector {
 
 #[cfg(test)]
 mod test {
+    use chrono::NaiveDate;
+
     use super::read_all_from;
     use std::path::PathBuf;
 
     #[test]
     fn test_read_bad_file() {
-        assert!(
-            read_all_from(&PathBuf::from("./non-existant-file-for-testing-lipu-tenpo")).is_err()
-        );
+        assert!(read_all_from(
+            &PathBuf::from("./non-existant-file-for-testing-lipu-tenpo"),
+            chrono::Local::now().date_naive()
+        )
+        .is_err());
     }
 
     #[test]
     fn test_read_good_file() {
-        let result = read_all_from(&PathBuf::from("./test/test.csv"));
+        let result = read_all_from(
+            &PathBuf::from("./test/test.csv"),
+            NaiveDate::from_ymd_opt(2023, 6, 14).unwrap(),
+        );
         let entries = result.unwrap_or_default();
-        
+
         for e in &entries {
             println!("{}", String::from(e));
         }
-        
-        assert_eq!(entries.len(), 9);
+
+        assert_eq!(entries.len(), 5);
         assert_eq!(entries[0].activity, "**arrive");
     }
 }
