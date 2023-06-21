@@ -73,14 +73,13 @@ impl App {
     }
     
     pub fn load_entries(&mut self)  -> Result<Vec<Entry>, Box<dyn Error>>{
-        entries::read_all(self, self.current_date)
+        entries::read_all_date(&self.log_path, self.current_date)
     }
 
     // Construct a new Entry, save it to disk, and add it to the current list
-    pub fn add_entry(&self, input_str: String) {
+    pub fn add_entry(&self, input_str: String) -> Result<(), Box<dyn Error>> {
         let entry: Entry = Entry::from(input_str);
-        println!("{}", entry.project);
-        println!("{}", entry.activity);
+        entries::write(&self, entry)
     }
 
     /// Set running to false to quit the application.

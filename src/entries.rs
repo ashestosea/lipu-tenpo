@@ -1,6 +1,6 @@
-use std::{error::Error, path::PathBuf};
+use std::{error::Error, os::unix::fs::chroot, path::PathBuf};
 
-use chrono::{Duration, NaiveDate, NaiveDateTime};
+use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
 use serde::{Deserialize, Serialize};
 use tui::{
     style::{Modifier, Style},
@@ -62,9 +62,7 @@ pub struct Entry {
 
 impl From<String> for Entry {
     fn from(value: String) -> Entry {
-        let now =
-            chrono::NaiveDateTime::from_timestamp_millis(chrono::Local::now().timestamp_millis())
-                .unwrap();
+        let now = chrono::Local::now().naive_local();
         let (first, tags) = value
             .split_once('+')
             .unwrap_or_else(|| (value.as_str(), ""));
@@ -205,11 +203,7 @@ impl Entry {
     }
 }
 
-pub fn read_all(app: &App, date: NaiveDate) -> Result<Vec<Entry>, Box<dyn Error>> {
-    read_all_from(&PathBuf::from(&app.log_path), date)
-}
-
-pub fn read_all_from(path: &PathBuf, date: NaiveDate) -> Result<Vec<Entry>, Box<dyn Error>> {
+pub fn read_all_date(path: &PathBuf, date: NaiveDate) -> Result<Vec<Entry>, Box<dyn Error>> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
         .flexible(true)
@@ -244,6 +238,48 @@ pub fn read_all_from(path: &PathBuf, date: NaiveDate) -> Result<Vec<Entry>, Box<
     Ok(entries)
 }
 
+pub fn read_all(path: &PathBuf) -> Result<Vec<Entry>, Box<dyn Error>> {
+    let mut reader = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .flexible(true)
+        .quoting(true)
+        .trim(csv::Trim::All)
+        .from_path(path)?;
+
+    let read_results: Result<Vec<EntryRaw>, csv::Error> = reader
+        .deserialize()
+        .map(|f| -> Result<EntryRaw, csv::Error> { Ok(f?) })
+        .collect();
+
+    let raw_entries = match read_results {
+        Ok(x) => x,
+        Err(error) => panic!("Read error {:?}", error),
+    };
+
+    let count = raw_entries.len();
+    let mut entries = vec![Entry::default(); count];
+
+    for i in 0..count {
+        if i == 0 {
+            entries[i] = Entry::from_raw(&raw_entries[i]);
+        } else {
+            entries[i] = Entry::from_raw_previous(&raw_entries[i], &raw_entries[i - 1]);
+        }
+    }
+
+    Ok(entries)
+}
+
+pub fn write(app: &App, entry: Entry) -> Result<(), Box<dyn Error>> {
+    let mut path_string = app.log_path.clone().into_os_string();
+    path_string.push("-tmp");
+    let temp_path: PathBuf = path_string.into();
+    let mut entries = read_all(&app.log_path)?;
+    entries.push(entry);
+    write_to(&app.log_path, &temp_path, &entries)?;
+    Ok(())
+}
+
 pub fn write_to(
     path: &PathBuf,
     temp_path: &PathBuf,
@@ -251,7 +287,8 @@ pub fn write_to(
 ) -> Result<(), std::io::Error> {
     let mut writer = csv::WriterBuilder::new()
         .has_headers(false)
-        .quote_style(csv::QuoteStyle::NonNumeric)
+        // .delimiter(delimiter)
+        .quote_style(csv::QuoteStyle::Necessary)
         .from_path(temp_path)?;
 
     for entry in entries {
@@ -307,21 +344,31 @@ mod string_vector {
 mod test {
     use chrono::NaiveDate;
 
-    use super::read_all_from;
+    use super::read_all;
+    use super::read_all_date;
     use std::path::PathBuf;
 
     #[test]
     fn test_read_bad_file() {
-        assert!(read_all_from(
-            &PathBuf::from("./non-existant-file-for-testing-lipu-tenpo"),
-            chrono::Local::now().date_naive()
-        )
-        .is_err());
+        assert!(read_all(&PathBuf::from("./non-existant-file-for-testing-lipu-tenpo")).is_err());
     }
 
     #[test]
     fn test_read_good_file() {
-        let result = read_all_from(
+        let result = read_all(&PathBuf::from("./test/test.csv"));
+        let entries = result.unwrap_or_default();
+
+        // for e in &entries {
+        //     println!("{}", String::from(e));
+        // }
+
+        assert_eq!(entries.len(), 9);
+        assert_eq!(entries[0].activity, "**arrive");
+    }
+
+    #[test]
+    fn test_date_read_good_file() {
+        let result = read_all_date(
             &PathBuf::from("./test/test.csv"),
             NaiveDate::from_ymd_opt(2023, 6, 14).unwrap(),
         );
