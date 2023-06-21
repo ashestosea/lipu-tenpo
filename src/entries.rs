@@ -63,9 +63,7 @@ pub struct Entry {
 impl From<String> for Entry {
     fn from(value: String) -> Entry {
         let now = chrono::Local::now().naive_local();
-        let (first, tags) = value
-            .split_once('+')
-            .unwrap_or((value.as_str(), ""));
+        let (first, tags) = value.split_once('+').unwrap_or((value.as_str(), ""));
         let (project, activity) = first.split_once(':').unwrap_or(("", first));
         Entry {
             start: now,
@@ -246,9 +244,7 @@ pub fn read_all(path: &PathBuf) -> Result<Vec<Entry>, Box<dyn Error>> {
         .trim(csv::Trim::All)
         .from_path(path)?;
 
-    let read_results: Result<Vec<EntryRaw>, csv::Error> = reader
-        .deserialize()
-        .collect();
+    let read_results: Result<Vec<EntryRaw>, csv::Error> = reader.deserialize().collect();
 
     let raw_entries = match read_results {
         Ok(x) => x,
