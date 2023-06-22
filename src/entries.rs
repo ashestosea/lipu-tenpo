@@ -93,10 +93,10 @@ pub struct Entry {
 impl From<&Entry> for Span<'_> {
     fn from(val: &Entry) -> Self {
         if val.is_on_task() {
-            Span::raw(format!("{:?}", val))
+            Span::raw(format!("{}", val))
         } else {
             Span::styled(
-                format!("{:?}", val),
+                format!("{}", val),
                 Style::default().add_modifier(Modifier::DIM),
             )
         }
@@ -106,10 +106,10 @@ impl From<&Entry> for Span<'_> {
 impl From<&Entry> for Text<'_> {
     fn from(val: &Entry) -> Self {
         if val.is_on_task() {
-            Text::raw(format!("{:?}", val))
+            Text::raw(format!("{}", val))
         } else {
             Text::styled(
-                format!("{:?}", val),
+                format!("{}", val),
                 Style::default().add_modifier(Modifier::DIM),
             )
         }
@@ -464,7 +464,7 @@ mod test {
         let entries = result.unwrap_or_default().entries;
 
         for e in &entries {
-            println!("{:?}", e);
+            println!("{}", e);
         }
 
         assert_eq!(entries.len(), 5);
