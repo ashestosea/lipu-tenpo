@@ -1,8 +1,4 @@
-use std::{
-    error::Error,
-    ops::Add,
-    path::PathBuf,
-};
+use std::{error::Error, ops::Add, path::PathBuf};
 
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
 use csv::ByteRecord;
@@ -263,13 +259,21 @@ impl EntryGroup {
             time_off_task: off_task,
         }
     }
-    
+
     pub fn time_on_task_display(&self) -> String {
-        format!("{}h {}m", self.time_on_task.num_hours(), self.time_on_task.num_minutes() % 60)
+        format!(
+            "{}h {}m",
+            self.time_on_task.num_hours(),
+            self.time_on_task.num_minutes() % 60
+        )
     }
-    
+
     pub fn time_off_task_display(&self) -> String {
-        format!("{}h {}m", self.time_off_task.num_hours(), self.time_off_task.num_minutes() % 60)
+        format!(
+            "{}h {}m",
+            self.time_off_task.num_hours(),
+            self.time_off_task.num_minutes() % 60
+        )
     }
 }
 

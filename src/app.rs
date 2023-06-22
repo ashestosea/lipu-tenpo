@@ -76,13 +76,13 @@ impl App {
     }
 
     pub fn load_entries(&mut self) -> Result<(), Box<dyn Error>> {
-            match entries::read_all_date(&self.log_path, self.current_date, self.virual_midnight) {
-                Ok(c) => {
-                    self.current_entries = c;
-                    Ok(())
-                },
-                Err(e) => Err(e)
+        match entries::read_all_date(&self.log_path, self.current_date, self.virual_midnight) {
+            Ok(c) => {
+                self.current_entries = c;
+                Ok(())
             }
+            Err(e) => Err(e),
+        }
     }
 
     // Construct a new Entry, save it to disk, and add it to the current list
