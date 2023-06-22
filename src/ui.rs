@@ -7,7 +7,7 @@ use tui::{
     Frame,
 };
 
-use crate::app::App;
+use crate::app::{App, InputMode};
 
 /// Renders the user interface widgets.
 pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
@@ -98,7 +98,19 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
     frame.render_widget(other_summary, summary_layout[1]);
 
     // Input
+    let width = main_layout[3].width.max(3) - 3;
+    let scroll = app.input.visual_scroll(width as usize);
     let block = Block::default().borders(Borders::TOP);
-    let input = Paragraph::new(app.input.value()).block(block);
+    let input = Paragraph::new(app.input.value())
+        .scroll((0, scroll as u16))
+        .block(block);
     frame.render_widget(input, main_layout[3]);
+
+    match app.input_mode {
+        InputMode::Editing => {}
+        InputMode::Logging => frame.set_cursor(
+            main_layout[3].x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16,
+            main_layout[3].y + 1,
+        ),
+    }
 }
