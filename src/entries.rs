@@ -56,8 +56,13 @@ impl Ord for EntryRaw {
 
 impl EntryRaw {
     pub fn from_string(value: String, datetime: NaiveDateTime) -> EntryRaw {
-        let (first, tags) = value.split_once('+').unwrap_or((value.as_str(), ""));
+        let (time, rest) = EntryRaw::handle_custom_time(value);
+        let time = time.unwrap_or(datetime.time());
+        let datetime = NaiveDateTime::new(datetime.date(), time);
+
+        let (first, tags) = rest.split_once('+').unwrap_or((rest.as_str(), ""));
         let (project, activity) = first.split_once(':').unwrap_or(("", first));
+
         EntryRaw {
             end: datetime,
             project: String::from(project),
@@ -66,6 +71,22 @@ impl EntryRaw {
                 .split('+')
                 .map(|f| -> String { String::from(f) })
                 .collect(),
+        }
+    }
+
+    fn handle_custom_time(value: String) -> (Option<NaiveTime>, String) {
+        match value.len() > 5 {
+            true => {
+                if let Some((time, rest)) = value.split_once(' ') {
+                    (
+                        NaiveTime::parse_from_str(time, "%H:%M").ok(),
+                        rest.to_string(),
+                    )
+                } else {
+                    (None, value)
+                }
+            }
+            false => (None, value),
         }
     }
 
