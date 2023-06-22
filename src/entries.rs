@@ -389,7 +389,10 @@ pub fn write_to(
 
     for i in 0..entries.len() {
         // If this Entry is effectively the start of the day, add some line breaks before
-        if i > 0 && entries[i].effective_date(virtual_midnight) != entries[i - 1].end.date() {
+        if i > 0
+            && entries[i].effective_date(virtual_midnight)
+                != entries[i - 1].effective_date(virtual_midnight)
+        {
             writer.write_field("\n")?;
             writer.write_byte_record(&ByteRecord::new())?;
         }
