@@ -1,3 +1,4 @@
+use chrono::Datelike;
 use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout},
@@ -44,9 +45,14 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
     frame.render_widget(block, top_layout[0]);
 
     // Date
+    let current_date = app.current_date;
     let block = Block::default()
         .borders(Borders::BOTTOM)
-        .title(app.current_date.format("%Y-%m-%d").to_string())
+        .title(format!(
+            "─{}──{}",
+            current_date.weekday(),
+            &current_date.format("%Y─%m─%d")
+        ))
         .style(
             Style::default()
                 .bg(Color::Blue)
