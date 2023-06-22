@@ -34,6 +34,7 @@ pub fn handle_key_events(mut app: &mut App, key: KeyEvent) -> AppResult<()> {
                 KeyCode::Enter => {
                     app.add_entry(app.input.value().into());
                     app.input.reset();
+                    app.load_entries();
                 }
                 KeyCode::Esc => {
                     app.input_mode = InputMode::Editing;
