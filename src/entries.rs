@@ -367,7 +367,7 @@ pub fn write(app: &App, entry: EntryRaw) -> Result<(), Box<dyn Error>> {
     let mut entries_raw: Vec<EntryRaw> = read_all(&app.log_path)?
         .entries
         .iter()
-        .map(|x| EntryRaw::from(x))
+        .map(EntryRaw::from)
         .collect();
     entries_raw.push(entry);
     entries_raw.sort();
