@@ -1,4 +1,8 @@
-use std::{error::Error, path::PathBuf};
+use std::{
+    error::Error,
+    ops::Add,
+    path::PathBuf,
+};
 
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
 use csv::ByteRecord;
@@ -224,11 +228,56 @@ impl Entry {
     }
 }
 
+pub struct EntryGroup {
+    pub entries: Vec<Entry>,
+    time_on_task: Duration,
+    time_off_task: Duration,
+}
+
+impl Default for EntryGroup {
+    fn default() -> Self {
+        EntryGroup {
+            entries: vec![],
+            time_on_task: Duration::seconds(0),
+            time_off_task: Duration::seconds(0),
+        }
+    }
+}
+
+impl EntryGroup {
+    pub fn new(entries: Vec<Entry>) -> EntryGroup {
+        let mut on_task = Duration::seconds(0);
+        let mut off_task = Duration::seconds(0);
+
+        for entry in &entries {
+            if entry.is_on_task() {
+                on_task = on_task.add(entry.duration());
+            } else {
+                off_task = off_task.add(entry.duration());
+            }
+        }
+
+        EntryGroup {
+            entries,
+            time_on_task: on_task,
+            time_off_task: off_task,
+        }
+    }
+    
+    pub fn time_on_task_display(&self) -> String {
+        format!("{}h {}m", self.time_on_task.num_hours(), self.time_on_task.num_minutes() % 60)
+    }
+    
+    pub fn time_off_task_display(&self) -> String {
+        format!("{}h {}m", self.time_off_task.num_hours(), self.time_off_task.num_minutes() % 60)
+    }
+}
+
 pub fn read_all_date(
     path: &PathBuf,
     date: NaiveDate,
     virtual_midnight: NaiveTime,
-) -> Result<Vec<Entry>, Box<dyn Error>> {
+) -> Result<EntryGroup, Box<dyn Error>> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
         .flexible(true)
@@ -260,10 +309,10 @@ pub fn read_all_date(
         }
     }
 
-    Ok(entries)
+    Ok(EntryGroup::new(entries))
 }
 
-pub fn read_all(path: &PathBuf) -> Result<Vec<Entry>, Box<dyn Error>> {
+pub fn read_all(path: &PathBuf) -> Result<EntryGroup, Box<dyn Error>> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
         .flexible(true)
@@ -291,16 +340,21 @@ pub fn read_all(path: &PathBuf) -> Result<Vec<Entry>, Box<dyn Error>> {
         }
     }
 
-    Ok(entries)
+    Ok(EntryGroup::new(entries))
 }
 
 pub fn write(app: &App, entry: Entry) -> Result<(), Box<dyn Error>> {
     let mut path_string = app.log_path.clone().into_os_string();
     path_string.push("-tmp");
     let temp_path: PathBuf = path_string.into();
-    let mut entries = read_all(&app.log_path)?;
-    entries.push(entry);
-    write_to(&app.log_path, &temp_path, &entries, app.virual_midnight)?;
+    let mut entry_group = read_all(&app.log_path)?;
+    entry_group.entries.push(entry);
+    write_to(
+        &app.log_path,
+        &temp_path,
+        &entry_group.entries,
+        app.virual_midnight,
+    )?;
     Ok(())
 }
 
@@ -394,7 +448,7 @@ mod test {
     #[test]
     fn test_read_good_file() {
         let result = read_all(&PathBuf::from("./test/test.csv"));
-        let entries = result.unwrap_or_default();
+        let entries = result.unwrap_or_default().entries;
 
         // for e in &entries {
         //     println!("{}", String::from(e));
@@ -411,7 +465,7 @@ mod test {
             NaiveDate::from_ymd_opt(2023, 6, 14).unwrap(),
             NaiveTime::from_hms_opt(2, 0, 0).unwrap(),
         );
-        let entries = result.unwrap_or_default();
+        let entries = result.unwrap_or_default().entries;
 
         for e in &entries {
             println!("{}", String::from(e));

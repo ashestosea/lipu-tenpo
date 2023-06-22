@@ -16,6 +16,8 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
     // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
     // - https://github.com/tui-rs-revival/ratatui/tree/master/examples
 
+    let entry_group = &app.current_entries;
+
     let top_layout = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
@@ -63,8 +65,8 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
 
     // Log
     let block = Block::default().borders(Borders::NONE);
-    let entries = app.load_entries().unwrap_or_default();
-    let items: Vec<ListItem> = entries
+    let items: Vec<ListItem> = entry_group
+        .entries
         .iter()
         .map(|f| -> ListItem { ListItem::new(f) })
         .collect();
@@ -83,13 +85,14 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
     let block = Block::default()
         .borders(Borders::TOP)
         .border_type(BorderType::Double);
-    let work_summary = Paragraph::new("Work: 6h 30m").block(block);
+    let work_summary =
+        Paragraph::new(format!("On task: {}", entry_group.time_on_task_display())).block(block);
     frame.render_widget(work_summary, summary_layout[0]);
 
     let block = Block::default()
         .borders(Borders::TOP)
         .border_type(BorderType::Thick);
-    let other_summary = Paragraph::new("Other: 1h 15m")
+    let other_summary = Paragraph::new(format!("Other: {}", entry_group.time_off_task_display()))
         .alignment(Alignment::Right)
         .block(block);
     frame.render_widget(other_summary, summary_layout[1]);

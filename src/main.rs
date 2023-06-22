@@ -27,6 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut app = App::new();
     app.log_path = args.log.unwrap_or_default();
     app.virual_midnight = NaiveTime::from_hms_opt(2, 0, 0).unwrap();
+    app.load_entries()?;
 
     // Initialize the terminal user interface
     let backend = CrosstermBackend::new(io::stdout());
