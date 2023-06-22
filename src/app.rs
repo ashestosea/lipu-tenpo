@@ -3,10 +3,10 @@ use std::{
     path::PathBuf,
 };
 
-use chrono::{NaiveDate, NaiveTime};
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use tui_input::Input;
 
-use crate::entries::{self, Entry, EntryGroup};
+use crate::entries::{self, EntryGroup, EntryRaw};
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -87,7 +87,8 @@ impl App {
 
     // Construct a new Entry, save it to disk, and add it to the current list
     pub fn add_entry(&self, input_str: String) -> Result<(), Box<dyn Error>> {
-        let entry: Entry = Entry::from(input_str);
+        let time = chrono::Local::now().naive_local().time();
+        let entry = EntryRaw::from_string(input_str, NaiveDateTime::new(self.current_date, time));
         entries::write(self, entry)
     }
 

@@ -55,6 +55,20 @@ impl Ord for EntryRaw {
 }
 
 impl EntryRaw {
+    pub fn from_string(value: String, datetime: NaiveDateTime) -> EntryRaw {
+        let (first, tags) = value.split_once('+').unwrap_or((value.as_str(), ""));
+        let (project, activity) = first.split_once(':').unwrap_or(("", first));
+        EntryRaw {
+            end: datetime,
+            project: String::from(project),
+            activity: String::from(activity),
+            tags: tags
+                .split('+')
+                .map(|f| -> String { String::from(f) })
+                .collect(),
+        }
+    }
+
     fn effective_date(&self, virtual_midnight: NaiveTime) -> NaiveDate {
         match self.end.time() < virtual_midnight {
             true => self.end.date().pred_opt().unwrap(),
@@ -74,24 +88,6 @@ pub struct Entry {
     /// Can't be an empty string
     pub activity: String,
     pub tags: Vec<String>,
-}
-
-impl From<String> for Entry {
-    fn from(value: String) -> Entry {
-        let now = chrono::Local::now().naive_local();
-        let (first, tags) = value.split_once('+').unwrap_or((value.as_str(), ""));
-        let (project, activity) = first.split_once(':').unwrap_or(("", first));
-        Entry {
-            start: now,
-            end: now,
-            project: String::from(project),
-            activity: String::from(activity),
-            tags: tags
-                .split('+')
-                .map(|f| -> String { String::from(f) })
-                .collect(),
-        }
-    }
 }
 
 impl From<&Entry> for String {
@@ -215,15 +211,9 @@ impl Entry {
     pub fn is_on_task(&self) -> bool {
         !self.activity.contains("**")
     }
-
-    fn effective_date(&self, virtual_midnight: NaiveTime) -> NaiveDate {
-        match self.end.time() < virtual_midnight {
-            true => self.end.date().pred_opt().unwrap(),
-            false => self.end.date(),
-        }
-    }
 }
 
+#[derive(Clone)]
 pub struct EntryGroup {
     pub entries: Vec<Entry>,
     time_on_task: Duration,
@@ -347,25 +337,25 @@ pub fn read_all(path: &PathBuf) -> Result<EntryGroup, Box<dyn Error>> {
     Ok(EntryGroup::new(entries))
 }
 
-pub fn write(app: &App, entry: Entry) -> Result<(), Box<dyn Error>> {
+pub fn write(app: &App, entry: EntryRaw) -> Result<(), Box<dyn Error>> {
     let mut path_string = app.log_path.clone().into_os_string();
     path_string.push("-tmp");
     let temp_path: PathBuf = path_string.into();
-    let mut entry_group = read_all(&app.log_path)?;
-    entry_group.entries.push(entry);
-    write_to(
-        &app.log_path,
-        &temp_path,
-        &entry_group.entries,
-        app.virual_midnight,
-    )?;
+    let mut entries_raw: Vec<EntryRaw> = read_all(&app.log_path)?
+        .entries
+        .iter()
+        .map(|x| EntryRaw::from(x))
+        .collect();
+    entries_raw.push(entry);
+    entries_raw.sort();
+    write_to(&app.log_path, &temp_path, &entries_raw, app.virual_midnight)?;
     Ok(())
 }
 
 pub fn write_to(
     path: &PathBuf,
     temp_path: &PathBuf,
-    entries: &[Entry],
+    entries: &[EntryRaw],
     virtual_midnight: NaiveTime,
 ) -> Result<(), std::io::Error> {
     let mut writer = csv::WriterBuilder::new()
@@ -380,7 +370,7 @@ pub fn write_to(
             writer.write_field("\n")?;
             writer.write_byte_record(&ByteRecord::new())?;
         }
-        writer.serialize(EntryRaw::from(&entries[i]))?;
+        writer.serialize(&entries[i])?;
     }
 
     // for entry in entries {
