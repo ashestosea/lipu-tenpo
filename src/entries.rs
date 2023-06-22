@@ -1,4 +1,4 @@
-use std::{error::Error, ops::Add, path::PathBuf};
+use std::{error::Error, fmt::Display, ops::Add, path::PathBuf};
 
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
 use csv::ByteRecord;
@@ -90,37 +90,13 @@ pub struct Entry {
     pub tags: Vec<String>,
 }
 
-impl From<&Entry> for String {
-    fn from(val: &Entry) -> String {
-        let duration = val.duration();
-        let duration_str = format!("{}h {}m", duration.num_hours(), duration.num_minutes() % 60);
-        if duration.is_zero() {}
-        if val.project.is_empty() {
-            format!(
-                "{:<8} {:<6} {}",
-                duration_str,
-                val.end.format("%H:%M"),
-                val.activity
-            )
-        } else {
-            format!(
-                "{:<8} {:<6} {}: {}",
-                duration_str,
-                val.end.format("%H:%M"),
-                val.project,
-                val.activity
-            )
-        }
-    }
-}
-
 impl From<&Entry> for Span<'_> {
     fn from(val: &Entry) -> Self {
         if val.is_on_task() {
-            Span::raw(String::from(val))
+            Span::raw(format!("{:?}", val))
         } else {
             Span::styled(
-                String::from(val),
+                format!("{:?}", val),
                 Style::default().add_modifier(Modifier::DIM),
             )
         }
@@ -130,11 +106,37 @@ impl From<&Entry> for Span<'_> {
 impl From<&Entry> for Text<'_> {
     fn from(val: &Entry) -> Self {
         if val.is_on_task() {
-            Text::raw(String::from(val))
+            Text::raw(format!("{:?}", val))
         } else {
             Text::styled(
-                String::from(val),
+                format!("{:?}", val),
                 Style::default().add_modifier(Modifier::DIM),
+            )
+        }
+    }
+}
+
+impl Display for Entry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let duration = self.duration();
+        let duration_str = format!("{}h {}m", duration.num_hours(), duration.num_minutes() % 60);
+        if duration.is_zero() {}
+        if self.project.is_empty() {
+            write!(
+                f,
+                "{:<8} {:<6} {}",
+                duration_str,
+                self.end.format("%H:%M"),
+                self.activity
+            )
+        } else {
+            write!(
+                f,
+                "{:<8} {:<6} {}: {}",
+                duration_str,
+                self.end.format("%H:%M"),
+                self.project,
+                self.activity
             )
         }
     }
@@ -462,7 +464,7 @@ mod test {
         let entries = result.unwrap_or_default().entries;
 
         for e in &entries {
-            println!("{}", String::from(e));
+            println!("{:?}", e);
         }
 
         assert_eq!(entries.len(), 5);
