@@ -3,7 +3,7 @@ use std::{
     path::PathBuf,
 };
 
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveTime};
 use tui_input::Input;
 
 use crate::entries::{self, Entry};
@@ -31,6 +31,7 @@ pub struct App {
     /// Current Entries
     pub current_entries: Vec<Entry>,
     pub log_path: PathBuf,
+    pub virual_midnight: NaiveTime,
 }
 
 impl Default for App {
@@ -42,6 +43,7 @@ impl Default for App {
             current_date: chrono::Local::now().date_naive(),
             current_entries: Vec::new(),
             log_path: PathBuf::new(),
+            virual_midnight: NaiveTime::MIN,
         }
     }
 }
@@ -76,7 +78,7 @@ impl App {
     }
 
     pub fn load_entries(&mut self) -> Result<Vec<Entry>, Box<dyn Error>> {
-        entries::read_all_date(&self.log_path, self.current_date)
+        entries::read_all_date(&self.log_path, self.current_date, self.virual_midnight)
     }
 
     // Construct a new Entry, save it to disk, and add it to the current list

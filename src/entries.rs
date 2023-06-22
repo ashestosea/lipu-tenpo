@@ -1,6 +1,7 @@
 use std::{error::Error, path::PathBuf};
 
-use chrono::{Duration, NaiveDate, NaiveDateTime};
+use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
+use csv::ByteRecord;
 use serde::{Deserialize, Serialize};
 use tui::{
     style::{Modifier, Style},
@@ -17,12 +18,6 @@ pub struct EntryRaw {
     pub activity: String,
     #[serde(with = "string_vector")]
     pub tags: Vec<String>,
-}
-
-impl EntryRaw {
-    fn date_eq(&self, date: NaiveDate) -> bool {
-        self.end.date() == date
-    }
 }
 
 impl From<&Entry> for EntryRaw {
@@ -43,6 +38,27 @@ impl From<Entry> for EntryRaw {
             project: value.project,
             activity: value.activity,
             tags: value.tags,
+        }
+    }
+}
+
+impl PartialOrd for EntryRaw {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.end.cmp(&other.end))
+    }
+}
+
+impl Ord for EntryRaw {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.end.cmp(&other.end)
+    }
+}
+
+impl EntryRaw {
+    fn effective_date(&self, virtual_midnight: NaiveTime) -> NaiveDate {
+        match self.end.time() < virtual_midnight {
+            true => self.end.date().pred_opt().unwrap(),
+            false => self.end.date(),
         }
     }
 }
@@ -199,9 +215,20 @@ impl Entry {
     pub fn is_on_task(&self) -> bool {
         !self.activity.contains("**")
     }
+
+    fn effective_date(&self, virtual_midnight: NaiveTime) -> NaiveDate {
+        match self.end.time() < virtual_midnight {
+            true => self.end.date().pred_opt().unwrap(),
+            false => self.end.date(),
+        }
+    }
 }
 
-pub fn read_all_date(path: &PathBuf, date: NaiveDate) -> Result<Vec<Entry>, Box<dyn Error>> {
+pub fn read_all_date(
+    path: &PathBuf,
+    date: NaiveDate,
+    virtual_midnight: NaiveTime,
+) -> Result<Vec<Entry>, Box<dyn Error>> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
         .flexible(true)
@@ -212,7 +239,7 @@ pub fn read_all_date(path: &PathBuf, date: NaiveDate) -> Result<Vec<Entry>, Box<
     let read_results: Result<Vec<EntryRaw>, csv::Error> = reader
         .deserialize()
         .filter(|f: &Result<EntryRaw, csv::Error>| match f {
-            Ok(ent) => ent.date_eq(date),
+            Ok(ent) => ent.effective_date(virtual_midnight) == date,
             Err(_) => false,
         })
         .collect();
@@ -246,10 +273,12 @@ pub fn read_all(path: &PathBuf) -> Result<Vec<Entry>, Box<dyn Error>> {
 
     let read_results: Result<Vec<EntryRaw>, csv::Error> = reader.deserialize().collect();
 
-    let raw_entries = match read_results {
+    let mut raw_entries = match read_results {
         Ok(x) => x,
         Err(error) => panic!("Read error {:?}", error),
     };
+
+    raw_entries.sort();
 
     let count = raw_entries.len();
     let mut entries = vec![Entry::default(); count];
@@ -271,7 +300,7 @@ pub fn write(app: &App, entry: Entry) -> Result<(), Box<dyn Error>> {
     let temp_path: PathBuf = path_string.into();
     let mut entries = read_all(&app.log_path)?;
     entries.push(entry);
-    write_to(&app.log_path, &temp_path, &entries)?;
+    write_to(&app.log_path, &temp_path, &entries, app.virual_midnight)?;
     Ok(())
 }
 
@@ -279,16 +308,29 @@ pub fn write_to(
     path: &PathBuf,
     temp_path: &PathBuf,
     entries: &[Entry],
+    virtual_midnight: NaiveTime,
 ) -> Result<(), std::io::Error> {
     let mut writer = csv::WriterBuilder::new()
         .has_headers(false)
-        // .delimiter(delimiter)
-        .quote_style(csv::QuoteStyle::Necessary)
+        .quote_style(csv::QuoteStyle::Never)
+        .flexible(true)
         .from_path(temp_path)?;
 
-    for entry in entries {
-        writer.serialize(EntryRaw::from(entry))?;
+    for i in 0..entries.len() {
+        // If this Entry is effectively the start of the day, add some line breaks before
+        if i > 0 && entries[i].effective_date(virtual_midnight) != entries[i - 1].end.date() {
+            writer.write_field("\n")?;
+            writer.write_byte_record(&ByteRecord::new())?;
+        }
+        writer.serialize(EntryRaw::from(&entries[i]))?;
     }
+
+    // for entry in entries {
+    //     if entry.end.time().hour() > 2 {
+    //         writer.write_byte_record(&ByteRecord::new())?;
+    //     }
+    //     writer.serialize(EntryRaw::from(entry))?;
+    // }
 
     std::fs::rename(temp_path, path)
 }
@@ -338,6 +380,7 @@ mod string_vector {
 #[cfg(test)]
 mod test {
     use chrono::NaiveDate;
+    use chrono::NaiveTime;
 
     use super::read_all;
     use super::read_all_date;
@@ -366,6 +409,7 @@ mod test {
         let result = read_all_date(
             &PathBuf::from("./test/test.csv"),
             NaiveDate::from_ymd_opt(2023, 6, 14).unwrap(),
+            NaiveTime::from_hms_opt(2, 0, 0).unwrap(),
         );
         let entries = result.unwrap_or_default();
 

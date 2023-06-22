@@ -1,3 +1,4 @@
+use chrono::NaiveTime;
 use clap::Parser;
 use crossterm::event::Event as CrosstermEvent;
 use lipu_tenpo::app::App;
@@ -25,6 +26,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Create the application
     let mut app = App::new();
     app.log_path = args.log.unwrap_or_default();
+    app.virual_midnight = NaiveTime::from_hms_opt(2, 0, 0).unwrap();
 
     // Initialize the terminal user interface
     let backend = CrosstermBackend::new(io::stdout());
