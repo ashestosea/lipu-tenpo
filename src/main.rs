@@ -1,4 +1,3 @@
-use chrono::NaiveTime;
 use clap::Parser;
 use crossterm::event::Event as CrosstermEvent;
 use lipu_tenpo::app::App;
@@ -25,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Create the application
     let mut app = App::new(
         args.log.unwrap_or_default(),
-        NaiveTime::from_hms_opt(2, 0, 0).unwrap(),
+        args.config.unwrap_or_default(),
     );
     app.load_entries()?;
 

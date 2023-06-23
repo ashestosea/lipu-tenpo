@@ -16,3 +16,5 @@ pub mod handler;
 pub mod entries;
 
 pub mod files;
+
+pub mod config;

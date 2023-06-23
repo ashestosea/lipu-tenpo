@@ -372,7 +372,12 @@ pub fn write(app: &App, entry: EntryRaw) -> Result<(), Box<dyn Error>> {
         .collect();
     entries_raw.push(entry);
     entries_raw.sort();
-    write_to(&log_path, &temp_path, &entries_raw, app.virtual_midnight)?;
+    write_to(
+        &log_path,
+        &temp_path,
+        &entries_raw,
+        app.config.virtual_midnight,
+    )?;
     Ok(())
 }
 

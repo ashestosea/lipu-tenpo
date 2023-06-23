@@ -3,10 +3,11 @@ use std::{
     path::PathBuf,
 };
 
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{NaiveDate, NaiveDateTime};
 use tui_input::Input;
 
 use crate::{
+    config::{self, Config},
     entries::{self, EntryGroup, EntryRaw},
     files,
 };
@@ -31,20 +32,20 @@ pub struct App {
     pub current_date: NaiveDate,
     /// Current Entries
     pub current_entries: EntryGroup,
-    pub virtual_midnight: NaiveTime,
+    pub config: Config,
     log_path: String,
 }
 
 impl App {
     /// Constructs a new instance of [`App`].
-    pub fn new(log_path: String, virtual_midnight: NaiveTime) -> Self {
+    pub fn new(log_path: String, config_path: String) -> Self {
         Self {
             running: true,
             input: Input::default(),
             input_mode: InputMode::Logging,
             current_date: chrono::Local::now().date_naive(),
             current_entries: Default::default(),
-            virtual_midnight,
+            config: config::read_config(config_path),
             log_path,
         }
     }
@@ -73,7 +74,11 @@ impl App {
     }
 
     pub fn load_entries(&mut self) -> Result<(), Box<dyn Error>> {
-        match entries::read_all_date(&self.log_path(), self.current_date, self.virtual_midnight) {
+        match entries::read_all_date(
+            &self.log_path(),
+            self.current_date,
+            self.config.virtual_midnight,
+        ) {
             Ok(c) => {
                 self.current_entries = c;
                 Ok(())

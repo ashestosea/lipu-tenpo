@@ -29,3 +29,14 @@ pub fn log_path() -> PathBuf {
 
     timelog
 }
+
+pub fn config_path() -> PathBuf {
+    let dirs = project_dirs();
+    let config = dirs.config_dir().join(Path::new("config.toml"));
+
+    if !config.exists() {
+        std::fs::write(&config, crate::config::DEFAULT_STR).expect("Can't write config file!");
+    }
+
+    config
+}
