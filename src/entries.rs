@@ -361,17 +361,18 @@ pub fn read_all(path: &PathBuf) -> Result<EntryGroup, Box<dyn Error>> {
 }
 
 pub fn write(app: &App, entry: EntryRaw) -> Result<(), Box<dyn Error>> {
-    let mut path_string = app.log_path.clone().into_os_string();
+    let log_path = app.log_path();
+    let mut path_string = log_path.clone().into_os_string();
     path_string.push("-tmp");
     let temp_path: PathBuf = path_string.into();
-    let mut entries_raw: Vec<EntryRaw> = read_all(&app.log_path)?
+    let mut entries_raw: Vec<EntryRaw> = read_all(&log_path)?
         .entries
         .iter()
         .map(EntryRaw::from)
         .collect();
     entries_raw.push(entry);
     entries_raw.sort();
-    write_to(&app.log_path, &temp_path, &entries_raw, app.virual_midnight)?;
+    write_to(&log_path, &temp_path, &entries_raw, app.virtual_midnight)?;
     Ok(())
 }
 

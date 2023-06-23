@@ -6,7 +6,6 @@ use lipu_tenpo::app::App;
 use lipu_tenpo::event::{Event, EventHandler};
 use lipu_tenpo::handler;
 use lipu_tenpo::tui::Tui;
-use std::path::PathBuf;
 use std::{error::Error, io};
 use tui::{backend::CrosstermBackend, Terminal};
 
@@ -14,19 +13,20 @@ use tui::{backend::CrosstermBackend, Terminal};
 #[command(author, version, about, long_about = None)]
 struct Arguments {
     #[arg(short, long, value_name = "CONF_FILE")]
-    config: Option<PathBuf>,
+    config: Option<String>,
 
     #[arg(short, long, value_name = "LOG_FILE")]
-    log: Option<PathBuf>,
+    log: Option<String>,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Arguments::parse();
 
     // Create the application
-    let mut app = App::new();
-    app.log_path = args.log.unwrap_or_default();
-    app.virual_midnight = NaiveTime::from_hms_opt(2, 0, 0).unwrap();
+    let mut app = App::new(
+        args.log.unwrap_or_default(),
+        NaiveTime::from_hms_opt(2, 0, 0).unwrap(),
+    );
     app.load_entries()?;
 
     // Initialize the terminal user interface

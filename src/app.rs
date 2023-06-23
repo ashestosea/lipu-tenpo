@@ -6,7 +6,10 @@ use std::{
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use tui_input::Input;
 
-use crate::entries::{self, EntryGroup, EntryRaw};
+use crate::{
+    entries::{self, EntryGroup, EntryRaw},
+    files,
+};
 
 /// Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -28,28 +31,22 @@ pub struct App {
     pub current_date: NaiveDate,
     /// Current Entries
     pub current_entries: EntryGroup,
-    pub log_path: PathBuf,
-    pub virual_midnight: NaiveTime,
+    pub virtual_midnight: NaiveTime,
+    log_path: String,
 }
 
-impl Default for App {
-    fn default() -> App {
-        App {
+impl App {
+    /// Constructs a new instance of [`App`].
+    pub fn new(log_path: String, virtual_midnight: NaiveTime) -> Self {
+        Self {
             running: true,
             input: Input::default(),
             input_mode: InputMode::Logging,
             current_date: chrono::Local::now().date_naive(),
             current_entries: Default::default(),
-            log_path: PathBuf::new(),
-            virual_midnight: NaiveTime::MIN,
+            virtual_midnight,
+            log_path,
         }
-    }
-}
-
-impl App {
-    /// Constructs a new instance of [`App`].
-    pub fn new() -> Self {
-        Self::default()
     }
 
     /// Handles the tick event of the terminal.
@@ -76,7 +73,7 @@ impl App {
     }
 
     pub fn load_entries(&mut self) -> Result<(), Box<dyn Error>> {
-        match entries::read_all_date(&self.log_path, self.current_date, self.virual_midnight) {
+        match entries::read_all_date(&self.log_path(), self.current_date, self.virtual_midnight) {
             Ok(c) => {
                 self.current_entries = c;
                 Ok(())
@@ -90,6 +87,14 @@ impl App {
         let time = chrono::Local::now().naive_local().time();
         let entry = EntryRaw::from_string(input_str, NaiveDateTime::new(self.current_date, time));
         entries::write(self, entry)
+    }
+
+    pub fn log_path(&self) -> PathBuf {
+        if self.log_path.is_empty() {
+            files::log_path()
+        } else {
+            PathBuf::from(&self.log_path)
+        }
     }
 
     /// Set running to false to quit the application.

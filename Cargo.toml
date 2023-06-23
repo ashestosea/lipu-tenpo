@@ -14,3 +14,4 @@ clap = {version = "*", features = ["derive"]}
 chrono = {version = "*", features = ["serde"]}
 serde = {version = "*", features = ["derive"]}
 csv = "*"
+directories = "5.0.1"
