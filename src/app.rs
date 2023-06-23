@@ -101,6 +101,11 @@ impl App {
             PathBuf::from(&self.log_path)
         }
     }
+    
+    pub fn refresh(&mut self) {
+        self.input.reset();
+        self.load_entries();
+    }
 
     /// Set running to false to quit the application.
     pub fn quit(&mut self) {

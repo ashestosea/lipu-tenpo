@@ -28,16 +28,16 @@ pub fn handle_key_events(mut app: &mut App, key: KeyEvent) -> AppResult<()> {
                     }
                 },
                 KeyCode::Char('c') => app.quit(),
+                KeyCode::Char('q') => app.quit(),
                 _ => {}
             },
             _ => match key.code {
                 KeyCode::Enter => {
                     app.add_entry(app.input.value().into());
-                    app.input.reset();
-                    app.load_entries();
+                    app.refresh();
                 }
                 KeyCode::Esc => {
-                    app.input_mode = InputMode::Editing;
+                    app.refresh();
                 }
                 _ => {
                     app.input.handle_event(&CrosstermEvent::Key(KeyEvent {
