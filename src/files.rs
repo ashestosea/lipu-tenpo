@@ -1,7 +1,4 @@
-use std::{
-    path::{Path, PathBuf},
-    time,
-};
+use std::path::{Path, PathBuf};
 
 use directories::{BaseDirs, ProjectDirs};
 
