@@ -17,7 +17,7 @@ To track time "off task", enter the task but include `**` at the beginning or en
 
 To start your day it's recommended to enter an "off task" entry.
 
-By default lipu-tenpo tries to read a configuration file from your data directory (using the [directories](https://github.com/dirs-dev/directories-rs) crate)  
+By default lipu-tenpo tries to read a configuration file from your config directory (using the [directories](https://github.com/dirs-dev/directories-rs) crate)  
 If not found, lipu-tenpo writes a default configuration file before running.
 
 ```bash
@@ -30,9 +30,9 @@ lipu-tenpo -l, --log <LOG_FILE>
 ```
 Use a custom log file
 
-### Optional log formatting
+### Optional log entry formatting
 
-You can set the time of a log by entering a time (24 hour) before the project/activity:
+You can set the time of a log entry by entering a time (24 hour) before the project/activity:
 ```
 09:00 **arrive
 or
@@ -49,6 +49,19 @@ Commit log entry
 
 `Ctrl-c` / `Ctrl-q`  
 Quit
+
+## Log Format
+
+lipu-tenpo stores your timelog in a csv file (by default in your data directory per the [directories](https://github.com/dirs-dev/directories-rs) crate)   
+```
+2023-06-14 09:00, , **arrive, 
+2023-06-14 09:30, , dev meeting, 
+2023-06-14 12:00, GG, making paperclips, +optimization
+2023-06-14 13:00, , **lunch, 
+2023-06-14 17:15, CB, getting everybody and the stuff together, 
+```
+For ease of hand editing the fields aren't quoted so entering a log with a comma will result in a malformed log.
+I'm still deciding which way I want to go with this.
 
 ## Configuration
 
