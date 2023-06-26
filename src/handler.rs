@@ -2,9 +2,9 @@ use crate::app::{App, AppResult, InputMode};
 use crossterm::event::{Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers};
 use tui_input::backend::crossterm::EventHandler;
 
-pub fn handle_key_events(mut app: &mut App, key: KeyEvent) -> AppResult<()> {
+pub fn handle_key_events(mut app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
     match app.input_mode {
-        InputMode::Editing => match key.code {
+        InputMode::Editing => match key_evt.code {
             KeyCode::Char('e') => {
                 app.input_mode = InputMode::Logging;
             }
@@ -13,8 +13,8 @@ pub fn handle_key_events(mut app: &mut App, key: KeyEvent) -> AppResult<()> {
             }
             _ => {}
         },
-        InputMode::Logging => match key.modifiers {
-            KeyModifiers::CONTROL => match key.code {
+        InputMode::Logging => match key_evt.modifiers {
+            KeyModifiers::CONTROL => match key_evt.code {
                 KeyCode::Left => match app.move_prev_day() {
                     Ok(_) => {}
                     Err(e) => {
@@ -29,9 +29,10 @@ pub fn handle_key_events(mut app: &mut App, key: KeyEvent) -> AppResult<()> {
                 },
                 KeyCode::Char('c') => app.quit(),
                 KeyCode::Char('q') => app.quit(),
+                KeyCode::Char('h') => app.move_to_today(),
                 _ => {}
             },
-            _ => match key.code {
+            _ => match key_evt.code {
                 KeyCode::Enter => {
                     app.add_entry(app.input.value().into());
                     app.refresh();
@@ -41,10 +42,10 @@ pub fn handle_key_events(mut app: &mut App, key: KeyEvent) -> AppResult<()> {
                 }
                 _ => {
                     app.input.handle_event(&CrosstermEvent::Key(KeyEvent {
-                        code: key.code,
-                        modifiers: key.modifiers,
-                        kind: key.kind,
-                        state: key.state,
+                        code: key_evt.code,
+                        modifiers: key_evt.modifiers,
+                        kind: key_evt.kind,
+                        state: key_evt.state,
                     }));
                 }
             },

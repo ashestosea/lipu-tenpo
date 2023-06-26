@@ -49,19 +49,27 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
 
     // Date
     let current_date = app.current_date;
+    let is_today = current_date == chrono::Local::now().naive_local().date();
+    let is_today_str = if is_today { "@" } else { "" };
+    let date_style = if is_today {
+        Style::default()
+                .bg(Color::Magenta)
+                .fg(Color::Black)
+    } else {
+        Style::default()
+                .bg(Color::Gray)
+                .fg(Color::Black)
+    };
+
     let block = Block::default()
         .borders(Borders::BOTTOM)
         .title(format!(
-            "─{}──{}",
+            "─{}─{}──{}",
+            is_today_str,
             current_date.weekday(),
             &current_date.format("%Y─%m─%d")
         ))
-        .style(
-            Style::default()
-                .bg(Color::Blue)
-                .add_modifier(Modifier::DIM)
-                .fg(Color::DarkGray),
-        );
+        .style(date_style);
     frame.render_widget(block, main_layout[0]);
 
     // Log

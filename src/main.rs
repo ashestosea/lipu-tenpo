@@ -40,15 +40,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         // Render the UI
         tui.draw(&mut app)?;
         // Handle events
-        if let CrosstermEvent::Key(key) = crossterm::event::read()? {
-            handler::handle_key_events(&mut app, key)?
-        } else {
-            match tui.events.next()? {
-                Event::Tick => app.tick(),
-                Event::Mouse(_) => {}
-                Event::Resize(_, _) => {}
-                _ => {}
-            }
+        match tui.events.next()? {
+            Event::Tick => app.tick(),
+            Event::Mouse(_) => {},
+            Event::Key(key) => {handler::handle_key_events(&mut app, key);},
+            Event::Resize(_, _) => {}
         }
     }
 

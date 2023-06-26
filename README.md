@@ -51,6 +51,9 @@ or
 `Ctrl-Left` / `Ctrl-Right`  
 Change active day
 
+`Ctrl-h`  
+Jump to today
+
 `Enter`  
 Commit log entry
 
@@ -92,8 +95,10 @@ To do
 # TODO
 - [ ] Write install section
 - [x] Display current time since last log
-- [ ] Indicate if on today or not
-- [ ] Keybind to jump to today
+- [x] Indicate if on today or not
+- [x] Keybind to jump to today
+- [ ] Scrollable log list
+- [ ] Color preferences
 - [ ] Improve tests
 - [ ] Improve error handling
 - [ ] Translations (toki pona, etc.)
