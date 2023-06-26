@@ -39,6 +39,13 @@ or
 17:30 PROJ: debugging chibi robo
 ```
 
+You can also enter a log with a negative time offset:
+```
+-15 **arrive (will log an entry 15 minutes ago)
+or
+-1:30 PROJ: debugging chibi robo (will log an entry 1 hour and 30 minutes ago)
+```
+
 ## Key Bindings
 
 `Ctrl-Left` / `Ctrl-Right`  
@@ -84,7 +91,8 @@ To do
 
 # TODO
 - [ ] Write install section
-- [ ] Add offset tracking (-30 logs task 30 minutes ago)
 - [ ] Display current time since last log
 - [ ] Improve tests
+- [ ] Improve error handling
 - [ ] Translations (toki pona, etc.)
+- [ ] Add man page?

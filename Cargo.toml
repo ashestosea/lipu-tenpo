@@ -1,6 +1,6 @@
 [package]
 name = "lipu-tenpo"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["ashestosea"]
 license = "MIT"
 readme = "README.md"
