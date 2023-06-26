@@ -91,7 +91,9 @@ To do
 
 # TODO
 - [ ] Write install section
-- [ ] Display current time since last log
+- [x] Display current time since last log
+- [ ] Indicate if on today or not
+- [ ] Keybind to jump to today
 - [ ] Improve tests
 - [ ] Improve error handling
 - [ ] Translations (toki pona, etc.)

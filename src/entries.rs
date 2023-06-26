@@ -299,6 +299,21 @@ impl EntryGroup {
             self.time_off_task.num_minutes() % 60
         )
     }
+
+    pub fn time_since_last_display(&self) -> Option<String> {
+        if let Some(entry) = self.entries.last() {
+            let diff = chrono::Local::now().naive_local().time() - entry.end.time();
+            if diff > Duration::zero() {
+                return Some(format!(
+                    "{}h {}m",
+                    diff.num_hours(),
+                    diff.num_minutes() % 60
+                ));
+            }
+        }
+
+        None
+    }
 }
 
 pub fn read_all_date(

@@ -3,6 +3,7 @@ use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
+    text::Text,
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,
 };
@@ -65,11 +66,15 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
 
     // Log
     let block = Block::default().borders(Borders::NONE);
-    let items: Vec<ListItem> = entry_group
+    let mut items: Vec<ListItem> = entry_group
         .entries
         .iter()
         .map(|f| -> ListItem { ListItem::new(f) })
         .collect();
+    if let Some(mut time_since_last) = entry_group.time_since_last_display() {
+        time_since_last.insert_str(0, "> ");
+        items.push(ListItem::new(Text::raw(time_since_last)));
+    }
     let list: List = List::new(items)
         .block(block)
         .style(Style::default().bg(Color::DarkGray));
