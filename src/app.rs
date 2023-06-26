@@ -101,7 +101,7 @@ impl App {
             PathBuf::from(&self.log_path)
         }
     }
-    
+
     pub fn refresh(&mut self) {
         self.input.reset();
         self.load_entries();

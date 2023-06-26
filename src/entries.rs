@@ -1,6 +1,11 @@
-use std::{error::Error, fmt::Display, ops::Add, path::PathBuf};
+use std::{
+    error::Error,
+    fmt::Display,
+    ops::{Add, Sub},
+    path::PathBuf,
+};
 
-use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 use csv::ByteRecord;
 use serde::{Deserialize, Serialize};
 use tui::{
@@ -56,9 +61,8 @@ impl Ord for EntryRaw {
 
 impl EntryRaw {
     pub fn from_string(value: String, datetime: NaiveDateTime) -> EntryRaw {
-        let (time, rest) = EntryRaw::handle_custom_time(value);
-        let time = time.unwrap_or(datetime.time());
-        let datetime = NaiveDateTime::new(datetime.date(), time);
+        let (dt, rest) = EntryRaw::handle_custom_time(value, datetime);
+        let datetime = dt.unwrap_or(datetime);
 
         let (first, tags) = rest.split_once('+').unwrap_or((rest.as_str(), ""));
         let (project, activity) = first.split_once(':').unwrap_or(("", first));
@@ -74,20 +78,27 @@ impl EntryRaw {
         }
     }
 
-    fn handle_custom_time(value: String) -> (Option<NaiveTime>, String) {
-        match value.len() > 5 {
-            true => {
-                if let Some((time, rest)) = value.split_once(' ') {
-                    (
-                        NaiveTime::parse_from_str(time, "%H:%M").ok(),
-                        rest.to_string(),
-                    )
-                } else {
-                    (None, value)
+    fn handle_custom_time(
+        value: String,
+        datetime: NaiveDateTime,
+    ) -> (Option<NaiveDateTime>, String) {
+        let date = datetime.date();
+
+        if let Some((time, rest)) = value.split_once(' ') {
+            if let Ok(time) = NaiveTime::parse_from_str(time, "%H:%M") {
+                return (Some(NaiveDateTime::new(date, time)), rest.to_string());
+            } else if let Some(time) = time.strip_prefix('-') {
+                if let Ok(time) = NaiveTime::parse_from_str(time, "%H:%M") {
+                    let neg_dur = Duration::minutes(time.minute() as i64);
+                    return (Some(datetime.sub(neg_dur)), rest.to_string());
+                } else if let Ok(time) = time.parse::<i64>() {
+                    let neg_dir = Duration::minutes(time);
+                    return (Some(datetime.sub(neg_dir)), rest.to_string());
                 }
             }
-            false => (None, value),
         }
+
+        (None, value)
     }
 
     fn effective_date(&self, virtual_midnight: NaiveTime) -> NaiveDate {
