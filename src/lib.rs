@@ -18,3 +18,5 @@ pub mod entries;
 pub mod files;
 
 pub mod config;
+
+pub mod subcommands;

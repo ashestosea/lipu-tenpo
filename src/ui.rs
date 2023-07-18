@@ -2,7 +2,7 @@ use chrono::Datelike;
 use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::Text,
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,

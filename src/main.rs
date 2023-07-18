@@ -1,16 +1,19 @@
-use clap::Parser;
-use crossterm::event::Event as CrosstermEvent;
+use clap::{Parser, Subcommand};
 use lipu_tenpo::app::App;
 /// This example is taken from https://raw.githubusercontent.com/fdehau/tui-rs/master/examples/user_input.rs
 use lipu_tenpo::event::{Event, EventHandler};
 use lipu_tenpo::handler;
 use lipu_tenpo::tui::Tui;
+use std::process::exit;
 use std::{error::Error, io};
 use tui::{backend::CrosstermBackend, Terminal};
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-struct Arguments {
+#[command(author, version, about, long_about = None, infer_subcommands(true))]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+
     #[arg(short, long, value_name = "CONF_FILE")]
     config: Option<String>,
 
@@ -18,14 +21,29 @@ struct Arguments {
     log: Option<String>,
 }
 
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Summary,
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
-    let args = Arguments::parse();
+    let cli = Cli::parse();
 
     // Create the application
-    let mut app = App::new(
-        args.log.unwrap_or_default(),
-        args.config.unwrap_or_default(),
-    );
+    let mut app = App::new(cli.log.unwrap_or_default(), cli.config.unwrap_or_default());
+
+    match &cli.command {
+        Some(Commands::Summary) => {
+            lipu_tenpo::subcommands::summary(
+                &app.log_path(),
+                app.current_date,
+                app.config.virtual_midnight,
+            );
+            exit(0);
+        },
+        None => {}
+    }
+
     app.load_entries()?;
 
     // Initialize the terminal user interface
@@ -42,8 +60,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         // Handle events
         match tui.events.next()? {
             Event::Tick => app.tick(),
-            Event::Mouse(_) => {},
-            Event::Key(key) => {handler::handle_key_events(&mut app, key);},
+            Event::Mouse(_) => {}
+            Event::Key(key) => {
+                handler::handle_key_events(&mut app, key);
+            }
             Event::Resize(_, _) => {}
         }
     }

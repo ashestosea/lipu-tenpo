@@ -7,6 +7,17 @@ lipu-tenpo is inspired by [Gtimelog](https://github.com/gtimelog/gtimelog)
 
 ## Usage
 
+### Subcommands
+
+lipu-tenpo supports fuzzy subcommand matching (with clap infer_subcommands)
+
+```bash
+lipu-tenpo summary (alt. s, su, sum, etc.)
+```
+
+Prints the logs for today
+
+### Interactive
 ```bash
 lipu-tenpo
 ```
@@ -29,6 +40,7 @@ Use a custom conf file.
 lipu-tenpo -l, --log <LOG_FILE>
 ```
 Use a custom log file
+
 
 ### Optional log entry formatting
 
@@ -68,7 +80,7 @@ lipu-tenpo stores your timelog in a csv file (by default in your data directory 
 2023-06-14 09:30, , dev meeting, 
 2023-06-14 12:00, GG, making paperclips, +optimization
 2023-06-14 13:00, , **lunch, 
-2023-06-14 17:15, CB, getting everybody and the stuff together, 
+2023-06-14 17:15, CB, hunting down a betamax player, 
 ```
 For ease of hand editing the fields aren't quoted so entering a log with a comma will result in a malformed log.
 I'm still deciding which way I want to go with this.
@@ -81,7 +93,7 @@ tokey uses [TOML](https://toml.io/en/) for configuration
 virtual_midnight = [0-23] (default = 2)
 ```
 
-Any entries logged before this hour will belong to the previous day. (e.g. `01:30 PROJ: reticulating splines` would belong to the previous day but `02:00 PROJ: churning gender fluid` wouldn't.)  
+Any entries logged before this hour will belong to the previous day. (e.g. `01:30 PROJ: reticulating splines` would belong to the previous day but `02:00 PROJ: writing treatise on "kepeken e"` wouldn't.)  
 This allows you to track your time how you expect rather than have an awkward switch over at midnight.  
 
 ## Installation
