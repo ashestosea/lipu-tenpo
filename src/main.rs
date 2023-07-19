@@ -19,13 +19,14 @@ struct Cli {
 
     #[command(subcommand)]
     command: Option<Commands>,
+
+    new_entry: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Summary {
-        date: Option<String>,
-    },
+    Summary { date: Option<String> },
+    Log { entry: Option<String> },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -34,9 +35,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Create the application
     let mut app = App::new(cli.log.unwrap_or_default(), cli.config.unwrap_or_default());
 
-    match &cli.command {
+    match cli.command {
         Some(Commands::Summary { date }) => {
-            lipu_tenpo::subcommands::summary(&app.log_path(), date, app.config.virtual_midnight);
+            lipu_tenpo::subcommands::summary(&app, date);
+            exit(0);
+        }
+        Some(Commands::Log { entry }) => {
+            lipu_tenpo::subcommands::log(&app, entry);
             exit(0);
         }
         None => {}
