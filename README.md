@@ -5,19 +5,23 @@ Track your tasks when you move on to something else. No need to remember when yo
 
 lipu-tenpo is inspired by [Gtimelog](https://github.com/gtimelog/gtimelog)
 
-## Usage
-
-### Subcommands
+## Subcommands
 
 lipu-tenpo supports fuzzy subcommand matching (with clap infer_subcommands)
 
 ```bash
-lipu-tenpo summary (alt. s, su, sum, etc.)
+lipu-tenpo log [DATE]
 ```
 
-Prints the logs for today
+Prints the logs from DATE or today if not specified.
 
-### Interactive
+```bash
+lipu-tenpo add [ENTRY]
+```
+
+Add a new entry using any format supported in Interactive mode
+
+## Interactive Usage
 ```bash
 lipu-tenpo
 ```

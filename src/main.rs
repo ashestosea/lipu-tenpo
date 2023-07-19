@@ -23,8 +23,8 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Summary { date: Option<String> },
-    Log { entry: Option<String> },
+    Log { date: Option<Vec<String>> },
+    Add { entry: Option<Vec<String>> },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -34,12 +34,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut app = App::new(cli.log.unwrap_or_default(), cli.config.unwrap_or_default());
 
     match cli.command {
-        Some(Commands::Summary { date }) => {
-            lipu_tenpo::subcommands::summary(&app, date);
+        Some(Commands::Log { date }) => {
+            lipu_tenpo::subcommands::log(&app, date);
             exit(0);
         }
-        Some(Commands::Log { entry }) => {
-            lipu_tenpo::subcommands::log(&app, entry);
+        Some(Commands::Add { entry }) => {
+            lipu_tenpo::subcommands::add(&app, entry);
             exit(0);
         }
         None => {}
