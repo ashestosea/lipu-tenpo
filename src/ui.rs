@@ -52,13 +52,9 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
     let is_today = current_date == chrono::Local::now().naive_local().date();
     let is_today_str = if is_today { "@" } else { "" };
     let date_style = if is_today {
-        Style::default()
-                .bg(Color::Magenta)
-                .fg(Color::Black)
+        Style::default().bg(Color::Magenta).fg(Color::Black)
     } else {
-        Style::default()
-                .bg(Color::Gray)
-                .fg(Color::Black)
+        Style::default().bg(Color::Gray).fg(Color::Black)
     };
 
     let block = Block::default()

@@ -11,19 +11,21 @@ use tui::{backend::CrosstermBackend, Terminal};
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, infer_subcommands(true))]
 struct Cli {
-    #[command(subcommand)]
-    command: Option<Commands>,
-
     #[arg(short, long, value_name = "CONF_FILE")]
     config: Option<String>,
 
     #[arg(short, long, value_name = "LOG_FILE")]
     log: Option<String>,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Summary,
+    Summary {
+        date: Option<String>,
+    },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -33,14 +35,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut app = App::new(cli.log.unwrap_or_default(), cli.config.unwrap_or_default());
 
     match &cli.command {
-        Some(Commands::Summary) => {
-            lipu_tenpo::subcommands::summary(
-                &app.log_path(),
-                app.current_date,
-                app.config.virtual_midnight,
-            );
+        Some(Commands::Summary { date }) => {
+            lipu_tenpo::subcommands::summary(&app.log_path(), date, app.config.virtual_midnight);
             exit(0);
-        },
+        }
         None => {}
     }
 

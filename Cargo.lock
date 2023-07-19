@@ -261,6 +261,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fuzzydate"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10cc638ce39f54e307c2648a5cf89fb549a0b66bc59f9de933b51b1dfe53c813"
+dependencies = [
+ "chrono",
+ "lazy_static",
+ "thiserror",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -361,6 +372,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+
+[[package]]
 name = "libc"
 version = "0.2.146"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -374,13 +391,14 @@ checksum = "ef53942eb7bf7ff43a617b3e2c1c4a5ecf5944a7c1bc12d7ee39bbb15e5c1519"
 
 [[package]]
 name = "lipu-tenpo"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "chrono",
  "clap",
  "crossterm",
  "csv",
  "directories",
+ "fuzzydate",
  "ratatui",
  "serde",
  "toml",

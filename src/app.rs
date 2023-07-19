@@ -52,7 +52,7 @@ impl App {
 
     /// Handles the tick event of the terminal.
     pub fn tick(&self) {}
-    
+
     pub fn move_to_today(&mut self) {
         self.current_date = chrono::Local::now().naive_local().date();
         self.load_entries();

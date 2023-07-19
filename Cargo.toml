@@ -1,6 +1,6 @@
 [package]
 name = "lipu-tenpo"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["ashestosea"]
 license = "MIT"
 readme = "README.md"
@@ -20,3 +20,4 @@ serde = {version = "1.0.164", features = ["derive"]}
 csv = "1.2.2"
 directories = "5.0.1"
 toml = "0.7.4"
+fuzzydate = "0.2.1"
