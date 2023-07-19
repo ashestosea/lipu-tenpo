@@ -19,8 +19,6 @@ struct Cli {
 
     #[command(subcommand)]
     command: Option<Commands>,
-
-    new_entry: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
