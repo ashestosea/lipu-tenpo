@@ -17,6 +17,9 @@ struct Cli {
     #[arg(short, long, value_name = "LOG_FILE")]
     log: Option<String>,
 
+    #[arg(long, help = "Print csv")]
+    csv: bool,
+
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -35,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match cli.command {
         Some(Commands::Log { date }) => {
-            lipu_tenpo::subcommands::log(&app, date);
+            lipu_tenpo::subcommands::log(&app, date, cli.csv);
             exit(0);
         }
         Some(Commands::Add { entry }) => {

@@ -2,7 +2,7 @@ use crate::app::{App, AppResult, InputMode};
 use crossterm::event::{Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers};
 use tui_input::backend::crossterm::EventHandler;
 
-pub fn handle_key_events(mut app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
+pub fn handle_key_events(app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
     match app.input_mode {
         InputMode::Editing => match key_evt.code {
             KeyCode::Char('e') => {
