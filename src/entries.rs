@@ -8,10 +8,7 @@ use std::{
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 use csv::ByteRecord;
 use serde::{Deserialize, Serialize};
-use tui::{
-    style::{Modifier, Style},
-    text::{Span, Text},
-};
+use ratatui::prelude::*;
 
 use crate::app::App;
 
