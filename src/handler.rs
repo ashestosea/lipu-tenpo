@@ -29,6 +29,7 @@ pub fn handle_key_events(app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
                 },
                 KeyCode::Char('c') => app.quit(),
                 KeyCode::Char('q') => app.quit(),
+                KeyCode::Home => app.move_to_today(),
                 KeyCode::Char('h') => app.move_to_today(),
                 _ => {}
             },
