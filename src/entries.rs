@@ -7,8 +7,8 @@ use std::{
 
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
 use csv::ByteRecord;
-use serde::{Deserialize, Serialize};
 use ratatui::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::app::App;
 

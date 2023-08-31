@@ -4,9 +4,9 @@ use lipu_tenpo::app::App;
 use lipu_tenpo::event::{Event, EventHandler};
 use lipu_tenpo::handler;
 use lipu_tenpo::tui::Tui;
+use ratatui::{backend::CrosstermBackend, Terminal};
 use std::process::exit;
 use std::{error::Error, io};
-use ratatui::{backend::CrosstermBackend, Terminal};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, infer_subcommands(true))]

@@ -27,7 +27,7 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
             .as_ref(),
         )
         .split(root_layout[0]);
-    
+
     let date_area = main_layout[0];
     let log_area = main_layout[1];
     let summary_area = main_layout[2];
