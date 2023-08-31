@@ -1,8 +1,5 @@
 use chrono::Datelike;
-use ratatui::{
-    prelude::*,
-    widgets::*,
-};
+use ratatui::{prelude::*, widgets::*};
 
 use crate::app::{App, InputMode};
 
@@ -131,10 +128,10 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
             main_layout[3].y + 1,
         ),
     }
-    
+
     // Hot Keys
     let hot_keys_block = Block::default().padding(Padding::horizontal(1)).dark_gray();
-    let hot_keys_help = Paragraph::new(format!("Ctrl+Left/Right: Prev/Next day, Ctrl+Home: Today"))
-        .block(hot_keys_block);
+    let hot_keys_help =
+        Paragraph::new("Ctrl+Left/Right: Prev/Next day, Ctrl+Home: Today").block(hot_keys_block);
     frame.render_widget(hot_keys_help, main_layout[4]);
 }
