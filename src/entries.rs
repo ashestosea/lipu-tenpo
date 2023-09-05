@@ -148,26 +148,19 @@ impl From<&Entry> for Text<'_> {
 impl Display for Entry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let duration = self.duration();
-        let duration_str = format!("{}h {}m", duration.num_hours(), duration.num_minutes() % 60);
-        if duration.is_zero() {}
-        if self.project.is_empty() {
-            write!(
-                f,
-                "{:<8} {:<6} {}",
-                duration_str,
-                self.end.format("%H:%M"),
-                self.activity
-            )
+        let duration_display = if duration.is_zero() {
+            String::new()
         } else {
-            write!(
-                f,
-                "{:<8} {:<6} {}: {}",
-                duration_str,
-                self.end.format("%H:%M"),
-                self.project,
-                self.activity
-            )
-        }
+            format!("{}h {}m", duration.num_hours(), duration.num_minutes() % 60)
+        };
+        
+        write!(
+            f,
+            "{:<8} {:<6} {}",
+            duration_display,
+            self.end.format("%H:%M"),
+            self.display_sans_time()
+        )
     }
 }
 
@@ -241,6 +234,21 @@ impl Entry {
 
     pub fn is_on_task(&self) -> bool {
         !self.activity.contains("**")
+    }
+
+    pub fn display_sans_time(&self) -> String {
+        if self.project.is_empty() {
+            format!(
+                "{}",
+                self.activity
+            )
+        } else {
+            format!(
+                "{}: {}",
+                self.project,
+                self.activity
+            )
+        }
     }
 }
 
