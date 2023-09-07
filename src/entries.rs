@@ -106,6 +106,44 @@ impl EntryRaw {
     }
 }
 
+#[derive(PartialEq, Eq, Hash, Clone)]
+pub struct EntryTitle(String);
+
+impl From<&Entry> for EntryTitle {
+    fn from(value: &Entry) -> Self {
+        Self(value.display_sans_time())
+    }
+}
+
+impl From<&EntryTitle> for String {
+    fn from(value: &EntryTitle) -> Self {
+        value.0.clone()
+    }
+}
+impl From<String> for EntryTitle {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl<'a> From<&'a str> for EntryTitle {
+    fn from(s: &'a str) -> Self {
+        EntryTitle(s.to_string())
+    }
+}
+
+impl From<EntryTitle> for String {
+    fn from(a: EntryTitle) -> Self {
+        a.0
+    }
+}
+
+impl<'a> From<&'a EntryTitle> for &'a str {
+    fn from(a: &'a EntryTitle) -> Self {
+        &a.0
+    }
+}
+
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
     pub start: NaiveDateTime,
@@ -153,7 +191,7 @@ impl Display for Entry {
         } else {
             format!("{}h {}m", duration.num_hours(), duration.num_minutes() % 60)
         };
-        
+
         write!(
             f,
             "{:<8} {:<6} {}",
@@ -238,16 +276,9 @@ impl Entry {
 
     pub fn display_sans_time(&self) -> String {
         if self.project.is_empty() {
-            format!(
-                "{}",
-                self.activity
-            )
+            self.activity.to_string()
         } else {
-            format!(
-                "{}: {}",
-                self.project,
-                self.activity
-            )
+            format!("{}: {}", self.project, self.activity)
         }
     }
 }
@@ -322,7 +353,7 @@ impl EntryGroup {
 }
 
 pub fn read_all_date(
-    path: &PathBuf,
+    log_contents: &String,
     date: NaiveDate,
     virtual_midnight: NaiveTime,
 ) -> Result<EntryGroup, Box<dyn Error>> {
@@ -331,7 +362,7 @@ pub fn read_all_date(
         .flexible(true)
         .quoting(true)
         .trim(csv::Trim::All)
-        .from_path(path)?;
+        .from_reader(log_contents.as_bytes());
 
     let read_results: Result<Vec<EntryRaw>, csv::Error> = reader
         .deserialize()
@@ -367,6 +398,37 @@ pub fn read_all(path: &PathBuf) -> Result<EntryGroup, Box<dyn Error>> {
         .quoting(true)
         .trim(csv::Trim::All)
         .from_path(path)?;
+
+    let read_results: Result<Vec<EntryRaw>, csv::Error> = reader.deserialize().collect();
+
+    let mut raw_entries = match read_results {
+        Ok(x) => x,
+        Err(error) => panic!("Read error {:?}", error),
+    };
+
+    raw_entries.sort();
+
+    let count = raw_entries.len();
+    let mut entries = vec![Entry::default(); count];
+
+    for i in 0..count {
+        if i == 0 {
+            entries[i] = Entry::from_raw(&raw_entries[i]);
+        } else {
+            entries[i] = Entry::from_raw_previous(&raw_entries[i], &raw_entries[i - 1]);
+        }
+    }
+
+    Ok(EntryGroup::new(entries))
+}
+
+pub fn read_all_from_string(log_contents: &String) -> Result<EntryGroup, Box<dyn Error>> {
+    let mut reader = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .flexible(true)
+        .quoting(true)
+        .trim(csv::Trim::All)
+        .from_reader(log_contents.as_bytes());
 
     let read_results: Result<Vec<EntryRaw>, csv::Error> = reader.deserialize().collect();
 
@@ -517,8 +579,9 @@ mod test {
 
     #[test]
     fn test_date_read_good_file() {
+        let log_contents = std::fs::read_to_string(&PathBuf::from("./test/test.csv")).unwrap();
         let result = read_all_date(
-            &PathBuf::from("./test/test.csv"),
+            &log_contents,
             NaiveDate::from_ymd_opt(2023, 6, 14).unwrap(),
             NaiveTime::from_hms_opt(2, 0, 0).unwrap(),
         );

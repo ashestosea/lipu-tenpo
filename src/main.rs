@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         None => {}
     }
 
-    app.load_entries()?;
+    app.refresh();
 
     // Initialize the terminal user interface
     let backend = CrosstermBackend::new(io::stdout());

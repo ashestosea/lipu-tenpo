@@ -41,6 +41,12 @@ pub fn handle_key_events(app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
                 KeyCode::Esc => {
                     app.refresh();
                 }
+                KeyCode::Up => {
+                    app.search_back();
+                }
+                KeyCode::Down => {
+                    app.search_forward();
+                }
                 _ => {
                     app.input.handle_event(&CrosstermEvent::Key(KeyEvent {
                         code: key_evt.code,

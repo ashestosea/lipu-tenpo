@@ -21,7 +21,8 @@ pub fn log(app: &App, date: Option<Vec<String>>, csv_print: bool) -> Result<(), 
         None => chrono::Local::now().date_naive(),
     };
 
-    let entry_group = entries::read_all_date(&app.log_path(), date, app.config.virtual_midnight)?;
+    let entry_group =
+        entries::read_all_date(&app.log_contents(), date, app.config.virtual_midnight)?;
     if csv_print {
         log_csv(entry_group)
     } else {

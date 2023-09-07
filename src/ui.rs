@@ -114,7 +114,23 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
         .padding(Padding::horizontal(1))
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
-    let input = Paragraph::new(app.input.value())
+
+    let match_results = app.search_index.search(app.input.value());
+
+    let input_display: &str = if match_results.is_empty() {
+        app.input.value()
+    } else {
+        let index = if app.search_cursor >= match_results.len() as u32 {
+            app.search_cursor = (match_results.len() - 1) as u32;
+            match_results.len() - 1
+        } else {
+            app.search_cursor as usize
+        };
+        app.entry_titles.get(*match_results[index]).unwrap().into()
+    };
+
+    // let autocomplete
+    let input = Paragraph::new(input_display)
         .scroll((0, scroll as u16))
         .block(input_block);
     frame.render_widget(input, input_area);
