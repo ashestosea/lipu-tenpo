@@ -34,7 +34,7 @@ pub struct App {
     pub current_entries: EntryGroup,
     pub entry_titles: Vec<EntryTitle>,
     pub search_index: SearchIndex<usize>,
-    pub search_cursor: u32,
+    pub search_cursor: i32,
     pub config: Config,
     log_path: String,
 }
@@ -50,7 +50,7 @@ impl App {
             current_entries: Default::default(),
             entry_titles: Default::default(),
             search_index: Default::default(),
-            search_cursor: 0,
+            search_cursor: -1,
             config: config::read_config(config_path),
             log_path,
         }
@@ -132,11 +132,16 @@ impl App {
     }
 
     pub fn search_back(&mut self) {
-        self.search_cursor = self.search_cursor.saturating_add_signed(1);
+        self.search_cursor = self.search_cursor.saturating_add(1);
     }
 
     pub fn search_forward(&mut self) {
-        self.search_cursor = self.search_cursor.saturating_add_signed(-1);
+        let temp = self.search_cursor - 1;
+        if temp < -1 {
+            self.search_cursor = -1;
+        } else {
+            self.search_cursor = temp;
+        }
     }
 
     pub fn log_path(&self) -> PathBuf {
