@@ -58,7 +58,7 @@ impl Ord for EntryRaw {
 
 impl EntryRaw {
     pub fn from_string(value: String, datetime: NaiveDateTime) -> EntryRaw {
-        let (dt, rest) = EntryRaw::handle_custom_time(value, datetime);
+        let (dt, rest) = split_time_and_entry(value, datetime);
         let datetime = dt.unwrap_or(datetime);
 
         let (first, tags) = rest.split_once('+').unwrap_or((rest.as_str(), ""));
@@ -75,29 +75,6 @@ impl EntryRaw {
         }
     }
 
-    fn handle_custom_time(
-        value: String,
-        datetime: NaiveDateTime,
-    ) -> (Option<NaiveDateTime>, String) {
-        let date = datetime.date();
-
-        if let Some((time, rest)) = value.split_once(' ') {
-            if let Ok(time) = NaiveTime::parse_from_str(time, "%H:%M") {
-                return (Some(NaiveDateTime::new(date, time)), rest.to_string());
-            } else if let Some(time) = time.strip_prefix('-') {
-                if let Ok(time) = NaiveTime::parse_from_str(time, "%H:%M") {
-                    let neg_dur = Duration::minutes(time.minute() as i64);
-                    return (Some(datetime.sub(neg_dur)), rest.to_string());
-                } else if let Ok(time) = time.parse::<i64>() {
-                    let neg_dir = Duration::minutes(time);
-                    return (Some(datetime.sub(neg_dir)), rest.to_string());
-                }
-            }
-        }
-
-        (None, value)
-    }
-
     fn effective_date(&self, virtual_midnight: NaiveTime) -> NaiveDate {
         match self.end.time() < virtual_midnight {
             true => self.end.date().pred_opt().unwrap(),
@@ -106,8 +83,37 @@ impl EntryRaw {
     }
 }
 
+pub fn split_time_and_entry(
+    value: String,
+    datetime: NaiveDateTime,
+) -> (Option<NaiveDateTime>, String) {
+    let date = datetime.date();
+
+    if let Some((time, rest)) = value.split_once(' ') {
+        if let Ok(time) = NaiveTime::parse_from_str(time, "%H:%M") {
+            return (Some(NaiveDateTime::new(date, time)), rest.to_string());
+        } else if let Some(time) = time.strip_prefix('-') {
+            if let Ok(time) = NaiveTime::parse_from_str(time, "%H:%M") {
+                let neg_dur = Duration::minutes(time.minute() as i64);
+                return (Some(datetime.sub(neg_dur)), rest.to_string());
+            } else if let Ok(time) = time.parse::<i64>() {
+                let neg_dir = Duration::minutes(time);
+                return (Some(datetime.sub(neg_dir)), rest.to_string());
+            }
+        }
+    }
+
+    (None, value)
+}
+
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct EntryTitle(String);
+
+impl Display for EntryTitle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl From<&Entry> for EntryTitle {
     fn from(value: &Entry) -> Self {

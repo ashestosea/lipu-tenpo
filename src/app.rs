@@ -5,8 +5,9 @@ use std::{
 };
 
 use chrono::{NaiveDate, NaiveDateTime};
+use crossterm::event::Event as CrosstermEvent;
 use indicium::simple::{SearchIndex, SearchIndexBuilder, SearchType};
-use tui_input::Input;
+use tui_input::{backend::crossterm::EventHandler, Input};
 
 use crate::{
     config::{self, Config},
@@ -28,6 +29,7 @@ pub struct App {
     pub running: bool,
     /// Current value of the input box
     pub input: Input,
+    pub current_log: String,
     pub input_mode: InputMode,
     /// Effective date
     pub current_date: NaiveDate,
@@ -45,6 +47,7 @@ impl App {
         Self {
             running: true,
             input: Input::default(),
+            current_log: Default::default(),
             input_mode: InputMode::Logging,
             current_date: chrono::Local::now().date_naive(),
             current_entries: Default::default(),
@@ -124,17 +127,82 @@ impl App {
         self.search_index = search_index;
     }
 
-    // Construct a new Entry, save it to disk, and add it to the current list
-    pub fn add_entry(&self, input_str: String) -> Result<(), Box<dyn Error>> {
+    /// Process [`crossterm`] input events and reconstruct [`App`] current_log
+    pub fn handle_event(&mut self, evt: &CrosstermEvent) {
+        self.input.handle_event(evt);
+        self.construct_current_log();
+    }
+
+    /// Construct the current log text from input and the search index if applicable
+    fn construct_current_log(&mut self) {
         let time = chrono::Local::now().naive_local().time();
-        let entry = EntryRaw::from_string(input_str, NaiveDateTime::new(self.current_date, time));
+        let (input_time, input_entry) = entries::split_time_and_entry(
+            self.input.value().to_string(),
+            NaiveDateTime::new(self.current_date, time),
+        );
+
+        let input_time: String = if let Some(datetime) = input_time {
+            datetime.format("%H:%M").to_string()
+        } else {
+            String::new()
+        };
+
+        let match_results = if input_entry.is_empty() {
+            self.search_index
+                .search(self.search_index.dump_keyword().unwrap())
+        } else {
+            self.search_index.search(input_entry.as_str())
+        };
+
+        self.current_log = if self.search_cursor < 0 || match_results.is_empty() {
+            if input_time.is_empty() {
+                input_entry
+            } else {
+                format!("{} {}", input_time, input_entry.as_str())
+            }
+        } else {
+            let index = if self.search_cursor >= match_results.len() as i32 {
+                self.search_cursor = (match_results.len() - 1) as i32;
+                match_results.len() - 1
+            } else {
+                self.search_cursor as usize
+            };
+            if input_time.is_empty() {
+                self.entry_titles.get(*match_results[index]).unwrap().into()
+            } else {
+                format!(
+                    "{} {}",
+                    input_time,
+                    self.entry_titles.get(*match_results[index]).unwrap()
+                )
+            }
+        };
+    }
+
+    /// Construct a new Entry from [`App`] current_log, save it to disk, and add it to the current list
+    pub fn commit_current_log(&self) -> Result<(), Box<dyn Error>> {
+        let time = chrono::Local::now().naive_local().time();
+        let entry = EntryRaw::from_string(
+            self.current_log.clone(),
+            NaiveDateTime::new(self.current_date, time),
+        );
         entries::write(self, entry)
     }
 
-    pub fn search_back(&mut self) {
-        self.search_cursor = self.search_cursor.saturating_add(1);
+    /// Construct a new [`EntryRaw`], save it to disk, and add it to the current list
+    pub fn add_log(&self, input: String) -> Result<(), Box<dyn Error>> {
+        let time = chrono::Local::now().naive_local().time();
+        let entry = EntryRaw::from_string(input, NaiveDateTime::new(self.current_date, time));
+        entries::write(self, entry)
     }
 
+    /// Move the history search cursor back one entry and reconstruct [`App`] current_log
+    pub fn search_back(&mut self) {
+        self.search_cursor = self.search_cursor.saturating_add(1);
+        self.construct_current_log();
+    }
+
+    /// Move the history search cursor forward one entry and reconstruct [`App`] current_log
     pub fn search_forward(&mut self) {
         let temp = self.search_cursor - 1;
         if temp < -1 {
@@ -142,8 +210,10 @@ impl App {
         } else {
             self.search_cursor = temp;
         }
+        self.construct_current_log();
     }
 
+    /// Get [`app::App`] log_path or the default log path from [`files::log_path()`]
     pub fn log_path(&self) -> PathBuf {
         if self.log_path.is_empty() {
             files::log_path()
@@ -152,12 +222,16 @@ impl App {
         }
     }
 
+    /// Get content of the log file as a [`String`]
     pub fn log_contents(&self) -> String {
         std::fs::read_to_string(self.log_path()).unwrap()
     }
 
+    /// Reset input, reload entries from disk, & rebuild the search index
     pub fn refresh(&mut self) {
         self.input.reset();
+        self.search_cursor = -1;
+        self.current_log = Default::default();
         let log_contents = self.log_contents();
         self.get_current_date_entries(&log_contents);
         self.rebuild_search_index(&log_contents);

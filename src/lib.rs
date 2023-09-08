@@ -13,8 +13,10 @@ pub mod tui;
 /// Event handler.
 pub mod handler;
 
+/// Utilities for constructing & manipulating log entries
 pub mod entries;
 
+/// Utilities for getting log and config paths
 pub mod files;
 
 pub mod config;

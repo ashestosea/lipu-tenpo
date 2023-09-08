@@ -1,6 +1,5 @@
 use crate::app::{App, AppResult, InputMode};
 use crossterm::event::{Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers};
-use tui_input::backend::crossterm::EventHandler;
 
 pub fn handle_key_events(app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
     match app.input_mode {
@@ -35,7 +34,7 @@ pub fn handle_key_events(app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
             },
             _ => match key_evt.code {
                 KeyCode::Enter => {
-                    app.add_entry(app.input.value().into());
+                    app.commit_current_log();
                     app.refresh();
                 }
                 KeyCode::Esc => {
@@ -48,7 +47,7 @@ pub fn handle_key_events(app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
                     app.search_forward();
                 }
                 _ => {
-                    app.input.handle_event(&CrosstermEvent::Key(KeyEvent {
+                    app.handle_event(&CrosstermEvent::Key(KeyEvent {
                         code: key_evt.code,
                         modifiers: key_evt.modifiers,
                         kind: key_evt.kind,

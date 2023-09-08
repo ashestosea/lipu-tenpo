@@ -115,26 +115,7 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
-    let match_results = if app.input.value().is_empty() {
-        app.search_index
-            .search(app.search_index.dump_keyword().unwrap())
-    } else {
-        app.search_index.search(app.input.value())
-    };
-
-    let input_display: &str = if app.search_cursor < 0 || match_results.is_empty() {
-        app.input.value()
-    } else {
-        let index = if app.search_cursor >= match_results.len() as i32 {
-            app.search_cursor = (match_results.len() - 1) as i32;
-            match_results.len() - 1
-        } else {
-            app.search_cursor as usize
-        };
-        app.entry_titles.get(*match_results[index]).unwrap().into()
-    };
-
-    let input = Paragraph::new(input_display)
+    let input = Paragraph::new(app.current_log.as_str())
         .scroll((0, scroll as u16))
         .block(input_block);
     frame.render_widget(input, input_area);

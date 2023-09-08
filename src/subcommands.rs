@@ -60,6 +60,6 @@ fn log_pretty(date: NaiveDate, entry_group: EntryGroup) -> Result<(), Box<dyn Er
 
 pub fn add(app: &App, entry: Option<Vec<String>>) {
     if let Some(entry) = entry {
-        app.add_entry(entry.join(" "));
+        app.add_log(entry.join(" "));
     }
 }
