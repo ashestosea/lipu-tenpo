@@ -56,11 +56,7 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
     frame.render_widget(title_block, date_area);
 
     // Log
-    let mut log_items: Vec<ListItem> = entry_group
-        .entries
-        .iter()
-        .map(|f| -> ListItem { ListItem::new(f) })
-        .collect();
+    let mut log_items: Vec<String> = entry_group.entries.iter().map(String::from).collect();
 
     let show_scrollbar = log_items.len() >= log_area.height.into();
     let scrollbar_constraint = if show_scrollbar { 5 } else { 0 };
@@ -89,10 +85,10 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
         .border_type(BorderType::Rounded);
     if let Some(mut time_since_last) = entry_group.time_since_last_display() {
         time_since_last.insert_str(0, "> ");
-        log_items.push(ListItem::new(Text::raw(time_since_last)));
+        log_items.push(time_since_last);
     }
-    let list_para: Vec<String> = entry_group.entries.iter().map(String::from).collect();
-    let para: Paragraph = Paragraph::new(list_para.join("\n"))
+
+    let para: Paragraph = Paragraph::new(log_items.join("\n"))
         .scroll((app.log_scroll as u16, 0))
         .block(log_block);
     frame.render_widget(para, log_layout[0]);
