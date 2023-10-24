@@ -46,6 +46,24 @@ pub fn handle_key_events(app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
                 KeyCode::Down => {
                     app.search_forward();
                 }
+                // KeyCode::Left => {
+                //     app.input = app.input.clone().with_cursor(app.input.cursor() - 1);
+                // }
+                // KeyCode::Right => {
+                //     app.input = app.input.clone().with_cursor(app.input.cursor() + 1);
+                // }
+                KeyCode::PageUp => {
+                    app.scroll_log_up();
+                }
+                KeyCode::PageDown => {
+                    app.scroll_log_down();
+                }
+                // KeyCode::Backspace => {
+                //     // app.current_log.pop();
+                //     app.current_log.remove(app.input.cursor());
+                //     // app.input = tui_input::Input::default();
+                //     app.input = app.input.clone().with_value(app.current_log.clone()).with_cursor(app.input.visual_cursor());
+                // }
                 _ => {
                     app.handle_event(&CrosstermEvent::Key(KeyEvent {
                         code: key_evt.code,
