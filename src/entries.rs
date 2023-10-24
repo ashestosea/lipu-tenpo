@@ -189,6 +189,24 @@ impl From<&Entry> for Text<'_> {
     }
 }
 
+impl From<&Entry> for String {
+    fn from(value: &Entry) -> String {
+        let duration = value.duration();
+        let duration_display = if duration.is_zero() {
+            String::new()
+        } else {
+            format!("{}h {}m", duration.num_hours(), duration.num_minutes() % 60)
+        };
+
+        format!(
+            "{:<8} {:<6} {}",
+            duration_display,
+            value.end.format("%H:%M"),
+            value.display_sans_time()
+        )
+    }
+}
+
 impl Display for Entry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let duration = self.duration();
@@ -324,6 +342,14 @@ impl EntryGroup {
             time_on_task: on_task,
             time_off_task: off_task,
         }
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.len() == 0
     }
 
     pub fn time_on_task_display(&self) -> String {
