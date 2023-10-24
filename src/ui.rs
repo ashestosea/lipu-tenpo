@@ -56,6 +56,21 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
     frame.render_widget(title_block, date_area);
 
     // Log
+    let mut log_items: Vec<ListItem> = entry_group
+        .entries
+        .iter()
+        .map(|f| -> ListItem { ListItem::new(f) })
+        .collect();
+
+    let show_scrollbar = log_items.len() >= log_area.height.into();
+    let scrollbar_constraint = if show_scrollbar { 5 } else { 0 };
+
+    let log_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .margin(0)
+        .constraints([Constraint::Min(1), Constraint::Max(scrollbar_constraint)].as_ref())
+        .split(log_area);
+
     let log_block = Block::default()
         .padding(Padding {
             left: 1,
@@ -63,19 +78,35 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
             bottom: 1,
             top: 0,
         })
-        .borders(Borders::LEFT | Borders::RIGHT)
+        .borders(
+            Borders::LEFT
+                | if show_scrollbar {
+                    Borders::NONE
+                } else {
+                    Borders::RIGHT
+                },
+        )
         .border_type(BorderType::Rounded);
-    let mut items: Vec<ListItem> = entry_group
-        .entries
-        .iter()
-        .map(|f| -> ListItem { ListItem::new(f) })
-        .collect();
     if let Some(mut time_since_last) = entry_group.time_since_last_display() {
         time_since_last.insert_str(0, "> ");
-        items.push(ListItem::new(Text::raw(time_since_last)));
+        log_items.push(ListItem::new(Text::raw(time_since_last)));
     }
-    let list: List = List::new(items).block(log_block);
-    frame.render_widget(list, log_area);
+    let list_para: Vec<String> = entry_group.entries.iter().map(String::from).collect();
+    let para: Paragraph = Paragraph::new(list_para.join("\n"))
+        .scroll((app.log_scroll as u16, 0))
+        .block(log_block);
+    frame.render_widget(para, log_layout[0]);
+
+    let log_scrollbar = Scrollbar::default()
+            // .orientation(ScrollbarOrientation::VerticalRight)
+            // .begin_symbol(Some("↑"))
+            // .end_symbol(Some("↓"))
+            // .thumb_symbol("-")
+            // .track_symbol(Some("|"))
+            ;
+    if show_scrollbar {
+        frame.render_stateful_widget(log_scrollbar, log_layout[1], &mut app.scroll_state);
+    }
 
     // Summary
     let summary_layout = Layout::default()
@@ -124,6 +155,7 @@ pub fn render<B: Backend>(app: &mut App, frame: &mut Frame<'_, B>) {
         InputMode::Editing => {}
         InputMode::Logging => frame.set_cursor(
             input_area.x + 2 + ((app.input.visual_cursor()).max(scroll) - scroll) as u16,
+            // input_area.x + 2 + app.current_log.len() as u16,
             input_area.y + 1,
         ),
     }
