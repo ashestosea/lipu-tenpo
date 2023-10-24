@@ -7,6 +7,7 @@ use std::{
 use chrono::{NaiveDate, NaiveDateTime};
 use crossterm::event::Event as CrosstermEvent;
 use indicium::simple::{SearchIndex, SearchIndexBuilder, SearchType};
+use ratatui::widgets::ScrollbarState;
 use tui_input::{backend::crossterm::EventHandler, Input};
 
 use crate::{
@@ -37,6 +38,8 @@ pub struct App {
     pub entry_titles: Vec<EntryTitle>,
     pub search_index: SearchIndex<usize>,
     pub search_cursor: i32,
+    pub log_scroll: usize,
+    pub scroll_state: ScrollbarState,
     pub config: Config,
     log_path: String,
 }
@@ -54,6 +57,8 @@ impl App {
             entry_titles: Default::default(),
             search_index: Default::default(),
             search_cursor: -1,
+            log_scroll: Default::default(),
+            scroll_state: Default::default(),
             config: config::read_config(config_path),
             log_path,
         }
@@ -234,7 +239,29 @@ impl App {
         self.current_log = Default::default();
         let log_contents = self.log_contents();
         self.get_current_date_entries(&log_contents);
+        self.scroll_log(0);
         self.rebuild_search_index(&log_contents);
+    }
+
+    pub fn scroll_log_up(&mut self) {
+        self.scroll_state.prev();
+        self.log_scroll = self.log_scroll.saturating_sub(1);
+    }
+
+    pub fn scroll_log_down(&mut self) {
+        self.scroll_state.next();
+        self.log_scroll = self
+            .log_scroll
+            .saturating_add(1)
+            .clamp(0, self.current_entries.len().saturating_sub(1));
+    }
+
+    pub fn scroll_log(&mut self, index: usize) {
+        self.log_scroll = index;
+        self.scroll_state = self
+            .scroll_state
+            .content_length(self.current_entries.len() as u16);
+        self.scroll_state = self.scroll_state.position(index as u16);
     }
 
     /// Set running to false to quit the application.
