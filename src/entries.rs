@@ -163,12 +163,12 @@ pub struct Entry {
     pub tags: Vec<String>,
 }
 
-impl From<&Entry> for Span<'_> {
+impl From<&Entry> for Line<'_> {
     fn from(val: &Entry) -> Self {
         if val.is_on_task() {
-            Span::raw(format!("{}", val))
+            Line::styled(format!("{}", val), Style::new())
         } else {
-            Span::styled(
+            Line::styled(
                 format!("{}", val),
                 Style::default().add_modifier(Modifier::DIM),
             )
