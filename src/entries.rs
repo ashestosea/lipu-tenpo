@@ -57,9 +57,9 @@ impl Ord for EntryRaw {
 }
 
 impl EntryRaw {
-    pub fn from_string(value: String, datetime: NaiveDateTime) -> EntryRaw {
-        let (dt, rest) = split_time_and_entry(value, datetime);
-        let datetime = dt.unwrap_or(datetime);
+    pub fn from_string(value: String, fallback_datetime: NaiveDateTime) -> EntryRaw {
+        let (dt, rest) = split_time_and_entry(value, fallback_datetime);
+        let datetime = dt.unwrap_or(fallback_datetime);
 
         let (first, tags) = rest.split_once('+').unwrap_or((rest.as_str(), ""));
         let (project, activity) = first.split_once(':').unwrap_or(("", first));
