@@ -1,4 +1,4 @@
-# lipu tenpo
+# 📓 lipu tenpo
 
 lipu-tenpo is a simple reverse time logging tool using [ratatui](https//github.com/tui-rs-revival/ratatui)  
 Track your tasks when you move on to something else. No need to remember when you started, it's when the last task ended!
