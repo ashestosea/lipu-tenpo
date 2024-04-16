@@ -258,10 +258,8 @@ impl App {
 
     pub fn scroll_log(&mut self, index: usize) {
         self.log_scroll = index;
-        self.scroll_state = self
-            .scroll_state
-            .content_length(self.current_entries.len() as u16);
-        self.scroll_state = self.scroll_state.position(index as u16);
+        self.scroll_state = self.scroll_state.content_length(self.current_entries.len());
+        self.scroll_state = self.scroll_state.position(index);
     }
 
     /// Set running to false to quit the application.
