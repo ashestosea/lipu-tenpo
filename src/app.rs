@@ -146,11 +146,7 @@ impl App {
             NaiveDateTime::new(self.current_date, time),
         );
 
-        let input_time: String = if let Some(datetime) = input_time {
-            datetime.format("%H:%M").to_string()
-        } else {
-            String::new()
-        };
+        let input_time = input_time.map_or(String::new(), |t| t.format("%H:%M").to_string());
 
         let match_results = if input_entry.is_empty() {
             self.search_index
