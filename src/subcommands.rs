@@ -8,21 +8,15 @@ use crate::{
 };
 
 pub fn log(app: &App, date: Option<Vec<String>>, csv_print: bool) -> Result<(), Box<dyn Error>> {
-    let date = match date {
-        Some(date_vec) => {
-            let date_str = date_vec.join(" ");
-            if let Ok(d) = fuzzydate::parse(&date_str) {
-                d.date()
-            } else {
-                println!("Couldn't parse date \"{}\"", date_str);
-                NaiveDate::default()
-            }
-        }
-        None => chrono::Local::now().date_naive(),
-    };
+    let date = date
+        .unwrap_or(vec![chrono::Local::now().date_naive().to_string()])
+        .join(" ");
 
+    let date_time = fuzzydate::parse(&date)?;
+    let date = date_time.date();
     let entry_group =
         entries::read_all_date(&app.log_contents(), date, app.config.virtual_midnight)?;
+
     if csv_print {
         log_csv(entry_group)
     } else {
@@ -60,6 +54,7 @@ fn log_pretty(date: NaiveDate, entry_group: EntryGroup) -> Result<(), Box<dyn Er
 
 pub fn add(app: &App, entry: Option<Vec<String>>) {
     if let Some(entry) = entry {
-        app.add_log(entry.join(" "));
+        app.add_log(entry.join(" "))
+            .expect("Error adding log entry")
     }
 }
