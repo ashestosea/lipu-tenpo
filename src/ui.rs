@@ -8,7 +8,7 @@ pub fn render(app: &mut App, frame: &mut Frame<'_>) {
     let entry_group = &app.current_entries;
 
     let root_layout = Layout::vertical([Constraint::Fill(1)]).margin(1);
-    
+
     let [main_area] = root_layout.areas(frame.size());
     let main_layout = Layout::vertical([
         Constraint::Max(1),
@@ -90,8 +90,7 @@ pub fn render(app: &mut App, frame: &mut Frame<'_>) {
     }
 
     // Summary
-    let summary_layout =
-        Layout::horizontal(Constraint::from_percentages([50, 50]));
+    let summary_layout = Layout::horizontal(Constraint::from_percentages([50, 50]));
     let [work_summary_area, other_summary_area] = summary_layout.areas(summary_area);
 
     let work_summary_block = Block::default()
@@ -132,11 +131,11 @@ pub fn render(app: &mut App, frame: &mut Frame<'_>) {
 
     match app.input_mode {
         InputMode::Editing => {}
-        InputMode::Logging => frame.set_cursor(
+        InputMode::Logging => frame.set_cursor_position(Position::new(
             input_area.x + 2 + ((app.input.visual_cursor()).max(scroll) - scroll) as u16,
             // input_area.x + 2 + app.current_log.len() as u16,
             input_area.y + 1,
-        ),
+        )),
     }
 
     // Hotkeys
