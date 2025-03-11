@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Initialize the terminal user interface
     let backend = CrosstermBackend::new(io::stdout());
     let terminal = Terminal::new(backend)?;
-    let events = EventHandler::new(5);
+    let events = EventHandler::new(1000);
     let mut tui = Tui::new(terminal, events);
     tui.init()?;
 
@@ -63,12 +63,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         tui.draw(&mut app)?;
         // Handle events
         match tui.events.next()? {
-            Event::Tick => app.tick(),
+            // Event::Tick => app.tick(),
             Event::Mouse(_) => {}
             Event::Key(key) => {
                 handler::handle_key_events(&mut app, key);
             }
             Event::Resize(_, _) => {}
+            _ => {}
         }
     }
 
