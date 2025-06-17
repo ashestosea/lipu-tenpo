@@ -28,9 +28,11 @@ pub enum InputMode {
 pub struct App {
     /// Is the application running?
     pub running: bool,
-    /// Current value of the input box
     pub input: Input,
-    pub current_log: String,
+    pub log_time: String,
+    pub log_opening: String,
+    pub log_input: String,
+    pub log_closing: String,
     pub input_mode: InputMode,
     /// Effective date
     pub current_date: NaiveDate,
@@ -50,7 +52,10 @@ impl App {
         Self {
             running: true,
             input: Input::default(),
-            current_log: Default::default(),
+            log_time: Default::default(),
+            log_opening: Default::default(),
+            log_input: Default::default(),
+            log_closing: Default::default(),
             input_mode: InputMode::Logging,
             current_date: chrono::Local::now().date_naive(),
             current_entries: Default::default(),
@@ -138,6 +143,34 @@ impl App {
         self.construct_current_log();
     }
 
+    pub fn cancel_search(&mut self) {
+        self.search_cursor = -1;
+        self.construct_current_log();
+    }
+
+    /// Override input with current history search
+    pub fn accept_history(&mut self) {
+        self.input = Input::new(
+            [
+                self.log_opening.clone(),
+                self.log_input.clone(),
+                self.log_closing.clone(),
+            ]
+            .concat(),
+        );
+        self.search_cursor = -1;
+        self.construct_current_log();
+    }
+
+    /// If current entry is empty, move input to editing time
+    pub fn handle_backspace_into_time(&mut self) {
+        if !self.log_time.is_empty() && self.log_input.is_empty() {
+            self.log_input = self.log_time.clone();
+            self.log_time.clear();
+            self.input = Input::new(self.log_input.clone());
+        }
+    }
+
     /// Construct the current log text from input and the search index if applicable
     fn construct_current_log(&mut self) {
         let time = chrono::Local::now().naive_local().time();
@@ -146,21 +179,23 @@ impl App {
             NaiveDateTime::new(self.current_date, time),
         );
 
-        let input_time = input_time.map_or(String::new(), |t| t.format("%H:%M").to_string());
+        self.log_input = input_entry.clone();
+
+        if let Some(time_string) = input_time.map(|t| t.format("%H:%M").to_string()) {
+            self.log_time = [time_string, String::from(" ")].concat();
+            self.input = Input::new(input_entry.clone());
+        }
 
         let match_results = if input_entry.is_empty() {
             self.search_index
                 .search(self.search_index.dump_keyword().unwrap())
         } else {
-            self.search_index.search(input_entry.as_str())
+            self.search_index.search(&input_entry)
         };
 
-        self.current_log = if self.search_cursor < 0 || match_results.is_empty() {
-            if input_time.is_empty() {
-                input_entry
-            } else {
-                format!("{} {}", input_time, input_entry.as_str())
-            }
+        if self.search_cursor < 0 || match_results.is_empty() {
+            self.log_opening.clear();
+            self.log_closing.clear();
         } else {
             let index = if self.search_cursor >= match_results.len() as i32 {
                 self.search_cursor = (match_results.len() - 1) as i32;
@@ -168,23 +203,29 @@ impl App {
             } else {
                 self.search_cursor as usize
             };
-            if input_time.is_empty() {
-                self.entry_titles.get(*match_results[index]).unwrap().into()
-            } else {
-                format!(
-                    "{} {}",
-                    input_time,
-                    self.entry_titles.get(*match_results[index]).unwrap()
-                )
-            }
-        };
+
+            let history: String = self.entry_titles.get(*match_results[index]).unwrap().into();
+            let start = history.find(self.log_input.as_str()).unwrap_or_default();
+
+            let (opening, mid) = history.split_at(start);
+            let (_, closing) = mid.split_at(self.log_input.len());
+
+            self.log_opening = String::from(opening);
+            self.log_closing = String::from(closing);
+        }
     }
 
     /// Construct a new Entry from [`App`] current_log, save it to disk, and add it to the current list
     pub fn commit_current_log(&self) -> Result<(), Box<dyn Error>> {
         let time = chrono::Local::now().naive_local().time();
         let entry = EntryRaw::from_string(
-            self.current_log.clone(),
+            [
+                self.log_time.clone(),
+                self.log_opening.clone(),
+                self.log_input.clone(),
+                self.log_closing.clone(),
+            ]
+            .concat(),
             NaiveDateTime::new(self.current_date, time),
         );
         entries::write(self, entry)
@@ -230,13 +271,15 @@ impl App {
 
     /// Reset input, reload entries from disk, & rebuild the search index
     pub fn refresh(&mut self) {
-        self.input.reset();
         self.search_cursor = -1;
-        self.current_log = Default::default();
-        let log_contents = self.log_contents();
-        self.get_current_date_entries(&log_contents);
+        self.log_time.clear();
+        self.log_opening.clear();
+        self.log_input.clear();
+        self.log_closing.clear();
+        self.input.reset();
+        self.get_current_date_entries(&self.log_contents());
         self.scroll_log(0);
-        self.rebuild_search_index(&log_contents);
+        self.rebuild_search_index(&self.log_contents());
     }
 
     pub fn scroll_log_up(&mut self) {

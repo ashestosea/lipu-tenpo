@@ -9,7 +9,7 @@ pub fn render(app: &mut App, frame: &mut Frame<'_>) {
 
     let root_layout = Layout::vertical([Constraint::Fill(1)]).margin(1);
 
-    let [main_area] = root_layout.areas(frame.size());
+    let [main_area] = root_layout.areas(frame.area());
     let main_layout = Layout::vertical([
         Constraint::Max(1),
         Constraint::Min(2),
@@ -124,7 +124,17 @@ pub fn render(app: &mut App, frame: &mut Frame<'_>) {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
-    let input = Paragraph::new(app.current_log.as_str())
+    let log_time = Span::raw(app.log_time.as_str());
+    let log_opening = Span::styled(app.log_opening.as_str(), Style::default().dim());
+    let log_input = Span::raw(app.log_input.as_str());
+    let log_closing = Span::styled(app.log_closing.as_str(), Style::default().dim());
+    let log_combined = Line::default().spans([
+        log_time.clone(),
+        log_opening.clone(),
+        log_input,
+        log_closing,
+    ]);
+    let input = Paragraph::new(log_combined)
         .scroll((0, scroll as u16))
         .block(input_block);
     frame.render_widget(input, input_area);
@@ -132,7 +142,11 @@ pub fn render(app: &mut App, frame: &mut Frame<'_>) {
     match app.input_mode {
         InputMode::Editing => {}
         InputMode::Logging => frame.set_cursor_position(Position::new(
-            input_area.x + 2 + ((app.input.visual_cursor()).max(scroll) - scroll) as u16,
+            input_area.x
+                + 2
+                + log_time.width() as u16
+                + log_opening.width() as u16
+                + ((app.input.visual_cursor()).max(scroll) - scroll) as u16,
             // input_area.x + 2 + app.current_log.len() as u16,
             input_area.y + 1,
         )),

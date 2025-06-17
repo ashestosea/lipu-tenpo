@@ -46,24 +46,37 @@ pub fn handle_key_events(app: &mut App, key_evt: KeyEvent) -> AppResult<()> {
                 KeyCode::Down => {
                     app.search_forward();
                 }
-                // KeyCode::Left => {
-                //     app.input = app.input.clone().with_cursor(app.input.cursor() - 1);
-                // }
-                // KeyCode::Right => {
-                //     app.input = app.input.clone().with_cursor(app.input.cursor() + 1);
-                // }
+                KeyCode::Right => {
+                    if app.search_cursor >= 0 && app.input.cursor() == app.input.value().len() {
+                        app.accept_history();
+                    } else {
+                        app.handle_event(&CrosstermEvent::Key(KeyEvent {
+                            code: key_evt.code,
+                            modifiers: key_evt.modifiers,
+                            kind: key_evt.kind,
+                            state: key_evt.state,
+                        }));
+                    }
+                }
+                KeyCode::Tab => {
+                    app.accept_history();
+                }
                 KeyCode::PageUp => {
                     app.scroll_log_up();
                 }
                 KeyCode::PageDown => {
                     app.scroll_log_down();
                 }
-                // KeyCode::Backspace => {
-                //     // app.current_log.pop();
-                //     app.current_log.remove(app.input.cursor());
-                //     // app.input = tui_input::Input::default();
-                //     app.input = app.input.clone().with_value(app.current_log.clone()).with_cursor(app.input.visual_cursor());
-                // }
+                KeyCode::Backspace => {
+                    app.cancel_search();
+                    app.handle_backspace_into_time();
+                    app.handle_event(&CrosstermEvent::Key(KeyEvent {
+                        code: key_evt.code,
+                        modifiers: key_evt.modifiers,
+                        kind: key_evt.kind,
+                        state: key_evt.state,
+                    }));
+                }
                 _ => {
                     app.handle_event(&CrosstermEvent::Key(KeyEvent {
                         code: key_evt.code,
