@@ -13,7 +13,7 @@ lipu-tenpo supports fuzzy subcommand matching (with clap infer_subcommands)
 lipu-tenpo log [DATE]
 ```
 
-Prints the logs from DATE or today if not specified.
+Prints the logs from DATE or today if no argument is supplied.
 
 ```bash
 lipu-tenpo add [ENTRY]
@@ -28,9 +28,9 @@ lipu-tenpo
 
 To track time "on task", enter the task you performed with the format `OptionalProject: activity +optional +tags` and lipu-tenpo will append a new log entry. The new entry will have a duration that fills the time since the last entry.
 
-To track time "off task", enter the task but include `**` at the beginning or end.
+To track time "off task", include `**` at the beginning or end of the entry.
 
-To start your day it's recommended to enter an "off task" entry.
+To start your day it's recommended to enter an "off task" entry. (e.g. `**arrive`)
 
 By default lipu-tenpo tries to read a configuration file from your config directory (using the [directories](https://github.com/dirs-dev/directories-rs) crate)  
 If not found, lipu-tenpo writes a default configuration file before running.
@@ -64,6 +64,12 @@ or
 
 ## Key Bindings
 
+`Up`  
+Search thru past log entries using the current input as the search query
+
+`Right/Tab`  
+Accept current history search (if any) (`Right` only accepts if the cursor is at the end of current input)
+
 `Ctrl-Left` / `Ctrl-Right`  
 Change active day
 
@@ -91,14 +97,14 @@ I'm still deciding which way I want to go with this.
 
 ## Configuration
 
-tokey uses [TOML](https://toml.io/en/) for configuration
+lipu-tenpo uses [TOML](https://toml.io/en/) for configuration
 
 ```
 virtual_midnight = [0-23] (default = 2)
 ```
 
 Any entries logged before this hour will belong to the previous day. (e.g. `01:30 PROJ: reticulating splines` would belong to the previous day but `02:00 PROJ: writing treatise on "kepeken e"` wouldn't.)  
-This allows you to track your time how you expect rather than have an awkward switch over at midnight.  
+This allows you to track your time based on your time awake rather than strictly by the clock.  
 
 ## Installation
 
@@ -113,7 +119,8 @@ To do
 - [x] Display current time since last log
 - [x] Indicate if on today or not
 - [x] Keybind to jump to today
-- [ ] Scrollable log list
+- [x] Scrollable log list
+- [ ] Edit past entries
 - [ ] Color preferences
 - [ ] Improve tests
 - [ ] Improve error handling
