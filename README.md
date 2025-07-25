@@ -1,6 +1,6 @@
 # 📓 lipu tenpo
 
-lipu-tenpo is a simple reverse time logging tool using [ratatui](https//github.com/tui-rs-revival/ratatui)  
+lipu-tenpo is a simple reverse time logging tool built with [ratatui](https//github.com/tui-rs-revival/ratatui)  
 Track your tasks when you move on to something else. No need to remember when you started, it's when the last task ended!
 
 lipu-tenpo is inspired by [Gtimelog](https://github.com/gtimelog/gtimelog)
@@ -121,6 +121,7 @@ To do
 - [x] Keybind to jump to today
 - [x] Scrollable log list
 - [ ] Edit past entries
+- [ ] Add reports (using projects and tags)
 - [ ] Color preferences
 - [ ] Improve tests
 - [ ] Improve error handling
